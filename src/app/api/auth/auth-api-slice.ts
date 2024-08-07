@@ -1,6 +1,5 @@
 import { apiSlice } from "../base/api-slice";
 import { ApiResponse } from "../base/type";
-import { User } from "../user/user-type";
 import { LoginRequest, TokenResponse } from "./auth-type";
 
 export const authApiSlice = apiSlice.injectEndpoints({

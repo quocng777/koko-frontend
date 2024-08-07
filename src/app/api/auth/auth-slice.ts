@@ -31,4 +31,4 @@ export const { setAuthenticatedUser, logOut, renewToken } = authSlice.actions;
 
 export default authSlice.reducer;
 
-export const getCurrentUser = (state: any) => state.auth.user;
+export const getCurrentAuthentication = (state: any) => state.auth.user;
