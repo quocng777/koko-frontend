@@ -1,15 +1,16 @@
 import { RouterProvider } from 'react-router-dom'
 import { router } from './routes'
 import { Provider } from 'react-redux'
-import { store } from './app/store';
+import { AuthLoader } from './app/context/auth-loader';
+import { store } from './app/api/store';
 
 function App() {
 
   return (
     <Provider store={store}>
-      <div className='min-h-screen'>
-      <RouterProvider router={router} />
-      </div>
+      <AuthLoader>
+        <RouterProvider router={router} />
+      </AuthLoader>
     </Provider>
   )
 }

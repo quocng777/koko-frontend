@@ -1,7 +1,7 @@
 import { BaseQueryFn, FetchArgs, fetchBaseQuery, FetchBaseQueryError, FetchBaseQueryMeta } from "@reduxjs/toolkit/query";
 import { createApi } from "@reduxjs/toolkit/query/react"
 import { ApiResponse } from "./type";
-import { TokenResponse } from "../auth/type";
+import { TokenResponse } from "../auth/auth-type";
 import { logOut } from "../auth/auth-slice";
 
 

@@ -6,9 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FcGoogle } from "react-icons/fc";
 import { IoLogoFacebook } from "react-icons/io5";
 import { useLoginMutation } from "../../app/api/auth/auth-api-slice";
-import { useDispatch } from "react-redux";
-import { setAuthenticatedUser } from "../../app/api/auth/auth-slice";
-import { LoginRequest } from "../../app/api/auth/type";
 import { useNavigate } from "react-router-dom";
 
 type LoginFormProps = {

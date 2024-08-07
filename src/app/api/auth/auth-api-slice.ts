@@ -1,6 +1,7 @@
-import { apiSlice } from "../api/api-slice";
-import { ApiResponse } from "../api/type";
-import { LoginRequest, TokenResponse } from "./type";
+import { apiSlice } from "../base/api-slice";
+import { ApiResponse } from "../base/type";
+import { User } from "../user/user-type";
+import { LoginRequest, TokenResponse } from "./auth-type";
 
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
@@ -15,5 +16,5 @@ export const authApiSlice = apiSlice.injectEndpoints({
 })
 
 export const {
-    useLoginMutation
+    useLoginMutation,
 } = authApiSlice
