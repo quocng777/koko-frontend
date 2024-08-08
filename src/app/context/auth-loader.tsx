@@ -16,11 +16,9 @@ export const AuthLoader = ({ children}: AuthLoaderProps) => {
         skip: !accessToken
     });
     
-    useEffect(() => {
-        if(data) {
-            dispatch(setAuthenticatedUser(data?.data as User))
-        }
-    }, [data, isSuccess])
+    if(data) {
+        dispatch(setAuthenticatedUser(data?.data as User))
+    }
 
     return (
         <>

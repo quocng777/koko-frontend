@@ -52,7 +52,7 @@ export const LoginForm = () => {
 
                    if(user.data) {
                         dispatch(setAuthenticatedUser(user.data));
-                        navigate(`${redirectStr}`, {replace: true});
+                        navigate(`/${redirectStr}`, {replace: true});
                    }
                 } catch(e) {
                     dispatch(logOut())

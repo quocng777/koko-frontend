@@ -22,17 +22,14 @@ export const router = createBrowserRouter([
     },
     {
         path: '',
-        element: (<ProtectedRoute>
+        element: (
+        <ProtectedRoute>
             <MainLayout />
         </ProtectedRoute>),
         children: [
             {
                 path: '/',
-                element: (
-                    <div>
-                        HELLO
-                    </div>
-                )
+                element: <Navigate to={'/messages'} replace/>
             },
             {
                 path: '/messages',
@@ -41,6 +38,10 @@ export const router = createBrowserRouter([
                         HELLO
                     </div>
                 )
+            },
+            {
+                path: '/home',
+                element: <div>HOME</div>
             }
             // {
             //     path: '/messages',
