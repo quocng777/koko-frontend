@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
                 )
             },
             {
-                path: '/protected/protected',
+                path: '/messages',
                 element: (
                     <div>
                         HELLO

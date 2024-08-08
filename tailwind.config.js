@@ -12,7 +12,9 @@ export default {
           foreground: 'rgb(255 255 255)'
         },
         background: {
-          DEFAULT: 'rgb(241 245 249)'
+          DEFAULT: 'rgb(241 245 249)',
+          hover: '#e2e8f0',
+          active: '#cbd5e1'
         }
       }
     },
