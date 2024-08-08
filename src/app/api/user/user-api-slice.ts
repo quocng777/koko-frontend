@@ -15,4 +15,4 @@ const userApiSlice = apiSlice.injectEndpoints({
     ),
 });
 
-export const { useGetAuthenticationQuery } = userApiSlice;
+export const { useGetAuthenticationQuery, useLazyGetAuthenticationQuery } = userApiSlice;

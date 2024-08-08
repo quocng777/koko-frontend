@@ -6,7 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FcGoogle } from "react-icons/fc";
 import { IoLogoFacebook } from "react-icons/io5";
 import { useLoginMutation } from "../../app/api/auth/auth-api-slice";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useGetAuthenticationQuery, useLazyGetAuthenticationQuery } from "../../app/api/user/user-api-slice";
+import { useDispatch } from "react-redux";
+import { logOut, setAuthenticatedUser } from "../../app/api/auth/auth-slice";
 
 type LoginFormProps = {
     onSuccess: () => void;
@@ -19,7 +22,7 @@ const loginInputSchema = z.object({
 
 type LoginInput = z.infer<typeof loginInputSchema>
 
-export const LoginForm = ({ onSuccess }: LoginFormProps) => {
+export const LoginForm = () => {
     
     const {
         register,
@@ -28,8 +31,14 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     } = useForm<LoginInput>({resolver: zodResolver(loginInputSchema)});
 
     const navigate = useNavigate();
+    const [ searchPrams ] = useSearchParams();
 
-    const [login] = useLoginMutation();
+    let redirectStr = searchPrams.get('redirectTo') || '';
+    redirectStr = decodeURIComponent(redirectStr);
+
+    const [ login ] = useLoginMutation();
+    const [ getAuthentication ] = useLazyGetAuthenticationQuery();
+    const dispatch = useDispatch();
 
     const onSubmit: SubmitHandler<LoginInput> = async (data) => {
         try {
@@ -38,9 +47,17 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
             if(token.data) {
                 localStorage.setItem("accessToken", token.data.accessToken);
                 localStorage.setItem("refreshToken", token.data.refreshToken);
-            }
-            navigate('/');
+                try {
+                   var user = await getAuthentication().unwrap();
 
+                   if(user.data) {
+                        dispatch(setAuthenticatedUser(user.data));
+                        navigate(`${redirectStr}`, {replace: true});
+                   }
+                } catch(e) {
+                    dispatch(logOut())
+                }
+            }
         } catch(e) {
             console.log(e);
         }

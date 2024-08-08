@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react"
 import { useDispatch } from "react-redux"
 import { setAuthenticatedUser } from "../api/auth/auth-slice"
 import { useGetAuthenticationQuery } from "../api/user/user-api-slice"
+import { User } from "../api/user/user-type"
 
 type AuthLoaderProps = {
     children: ReactNode
@@ -17,14 +18,14 @@ export const AuthLoader = ({ children}: AuthLoaderProps) => {
     
     useEffect(() => {
         if(data) {
-            dispatch(setAuthenticatedUser(data?.data))
+            dispatch(setAuthenticatedUser(data?.data as User))
         }
     }, [data, isSuccess])
 
     return (
         <>
             {isLoading && 'Loading'}
-            {(isSuccess || isError) && children}
+            {(!accessToken || isSuccess || isError) && children}
         </>
     )
 }
