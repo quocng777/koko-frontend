@@ -33,11 +33,12 @@ export const router = createBrowserRouter([
             },
             {
                 path: '/messages',
-                element: (
-                    <div>
-                        HELLO
-                    </div>
-                )
+                lazy: async () => {
+                    const { MessagePage } = await import('../features/message/message-page');
+                    return {
+                        Component: MessagePage
+                    };
+                }
             },
             {
                 path: '/home',
