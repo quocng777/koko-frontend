@@ -17,6 +17,7 @@ import { addConservation, addConservations, clearConservations } from "../app/ap
 import { useLazyGetLatestMessageQuery } from "../app/api/message/message-api-slice";
 import { Message } from "../app/api/message/message-type";
 import { addMessage } from "../app/api/message/message-slice";
+import useSocket from "../app/api/socket";
 
 type SideNavigationItem = {
     name: string,
@@ -61,6 +62,8 @@ export const MainLayout = () => {
     const [ getLatestMessage ] = useLazyGetLatestMessageQuery();
 
     const dispatch = useDispatch();
+
+    const client = useSocket();
  
     useEffect(() => {
 
@@ -101,6 +104,11 @@ export const MainLayout = () => {
         }
         fetchConservation()
     }, [isSuccess])
+
+    // active websocket, start listening event coming
+    useEffect(() => {
+        client.activate();
+    }, []);
 
     return (
         <div className="flex min-h-screen w-full">

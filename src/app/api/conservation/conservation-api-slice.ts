@@ -1,4 +1,3 @@
-import { TokenResponse } from "../auth/auth-type";
 import { apiSlice } from "../base/api-slice";
 import { ApiResponse } from "../base/type";
 import { ConservationResponse } from "./conservation-type";

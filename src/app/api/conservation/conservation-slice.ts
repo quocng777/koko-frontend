@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Conservation } from "./conservation-type";
-import { RootState } from "../store";
+import { Message } from "../message/message-type";
 
 const initialState: Conservation[] = [];
 
@@ -17,12 +17,20 @@ const conservationSlice = createSlice({
         },
         clearConservations: (state) => {
             state.length = 0;
+        },
+        updateLatestMsg: (state, action: PayloadAction<Message>) => {
+            let conservation = state.find((conservation) => conservation.id === action.payload.conservation);
+
+            if(conservation) {
+                conservation.lastMessageAt = action.payload.createdAt;
+                conservation.lastMessage = action.payload.id;
+            }
         }
     }
 }
 )
 
-export const { addConservation, addConservations, clearConservations } = conservationSlice.actions;
+export const { addConservation, addConservations, clearConservations, updateLatestMsg } = conservationSlice.actions;
 export default conservationSlice.reducer;
 
 export const getConservations = (state: any): Conservation[] => {
