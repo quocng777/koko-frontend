@@ -1,6 +1,7 @@
 import { apiSlice } from "../base/api-slice";
-import { ApiResponse } from "../base/type";
-import { Message } from "./message-type";
+import { ApiPaging, ApiResponse } from "../base/type";
+import { Message, MessageQuery, MessageSendParams } from "./message-type";
+
 
 const messageApi = apiSlice.injectEndpoints({
     endpoints: builder => ({
@@ -10,8 +11,24 @@ const messageApi = apiSlice.injectEndpoints({
                 params: params,
                 method: 'GET'
             })
+        }),
+        getMessages: builder.query<ApiResponse<ApiPaging<Message>>, MessageQuery & {
+            pageNum: number, 
+            pageSize: number}>({
+                query: (params) => ({
+                    url: '/messages',
+                    params: params,
+                    method: 'GET'
+                })
+            }),
+        sendMessage: builder.mutation<ApiResponse<Message>, MessageSendParams>({
+            query: (rq) => ({
+                url: '/messages',
+                body: rq,
+                method: 'POST'
+            })
         })
     })
 });
 
-export const { useLazyGetLatestMessageQuery } = messageApi;
+export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation } = messageApi;

@@ -1,3 +1,5 @@
+import { Message } from "../message/message-type"
+
 export type ConservationResponse = {
     id: number,
     avatar?: string,
@@ -8,8 +10,7 @@ export type ConservationResponse = {
 }
 
 export type Conservation = ConservationResponse & {
-    lastMessage?: number,
-    lastMessageAt?: Date
+    lastMessage: Message | null
 }
 
 export type Participant = {

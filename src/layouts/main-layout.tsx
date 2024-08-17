@@ -83,7 +83,7 @@ export const MainLayout = () => {
                         formatConservation.avatar = otherUser.userAvatar || defaultUserImage;
                     }
     
-                    let latestMessage: Message | null;
+                    let latestMessage;
     
                     try {
                         latestMessage = (await getLatestMessage({conservation: conservation.id}).unwrap()).data;
@@ -94,8 +94,7 @@ export const MainLayout = () => {
     
                     const transformedCons =  {
                         ...formatConservation,
-                        lastMessage: latestMessage?.id,
-                        updatedAt: latestMessage?.createdAt,
+                        lastMessage: latestMessage
                     }
 
                     dispatch(addConservation(transformedCons))

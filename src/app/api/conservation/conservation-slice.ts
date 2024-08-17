@@ -22,8 +22,7 @@ const conservationSlice = createSlice({
             let conservation = state.find((conservation) => conservation.id === action.payload.conservation);
 
             if(conservation) {
-                conservation.lastMessageAt = action.payload.createdAt;
-                conservation.lastMessage = action.payload.id;
+                conservation.lastMessage = action.payload;
             }
         }
     }
