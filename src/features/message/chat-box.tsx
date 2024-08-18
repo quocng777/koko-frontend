@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Conservation, Participant } from "../../app/api/conservation/conservation-type";
 import { Avatar } from "../../components/avatar";
 import { RootState } from "../../app/api/store";
-import { Dispatch, forwardRef, TextareaHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, forwardRef, MouseEventHandler, TextareaHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
 import { useLazyGetMessagesQuery, useSendMessageMutation } from "../../app/api/message/message-api-slice";
 import { addLocalMessage, addMessage, addMessages, deleteLocalMessage } from "../../app/api/message/message-slice";
 import { Message, MessageSendParams, MessageType } from "../../app/api/message/message-type";
@@ -14,6 +14,7 @@ import { BsEmojiKiss } from "react-icons/bs";
 import { LuSendHorizonal } from "react-icons/lu";
 import { MdOutlineKeyboardVoice } from "react-icons/md";
 import { updateLatestMsg } from "../../app/api/conservation/conservation-slice";
+import EmojiPicker, { EmojiClickData, EmojiStyle } from "emoji-picker-react";
 
 type AttachmentInput = {
     fileName: string,
@@ -36,9 +37,11 @@ const initialState: InputValues = {
 const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
     const [ inputValues, setInputValues ] = useState(initialState);
+    const [ showEmojiPicker, setShowEmojiPicker ] = useState(false);
 
     const textInputRef = useRef<HTMLTextAreaElement | null>(null);
     const dummyBottomRef = useRef<HTMLDivElement | null>(null);
+    const messageContainerRef = useRef<HTMLDivElement | null>(null);
 
     const user = useSelector(getCurrentAuthentication);
     const [ loadedFull, setLoadedFull ] = useState(false);
@@ -117,20 +120,33 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         }
     }
 
+    const handleEmojiPick = (e: EmojiClickData) => {
+        textInputRef.current!.value += e.emoji;
+    }
+
+    const handleEmojiBtnToggle = () => {
+        setShowEmojiPicker((state) => !state);
+    }
+
     useEffect(() => {
         if(haveSubmited == true) {
             scrollToNewestMessage();
             setHasSubmited(false);
         }
-    }, [haveSubmited])
+    }, [haveSubmited]);
 
+    useEffect(() => {
+    if (messageContainerRef.current) {
+        const container = messageContainerRef.current;
+        container.scrollTop = container.scrollHeight - container.clientHeight;
+      }}, [])
 
   return (
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col">
             <ChatBoxHeader conservation={conservation}/>
-            <div className="mb-4 overflow-y-scroll h-full">
-                <ul className="flex flex-col gap-1">
+            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full flex items-end">
+                <ul className="flex flex-col gap-1 max-h-full w-full">
                     {(() => {
                     let lastTime: number;
                     let lastUser: number;
@@ -184,7 +200,18 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                 </ul>
                 <div ref={dummyBottomRef}></div>
             </div>
-            <MessageInput ref={textInputRef} input={inputValues} setInput={setInputValues} onSubmit={onSubmit} />
+            { showEmojiPicker && <div className="absolute bottom-10">
+                <EmojiPicker
+                className="rounded-3xl" 
+                lazyLoadEmojis
+                onEmojiClick={handleEmojiPick}
+                searchDisabled
+                emojiStyle={EmojiStyle.NATIVE}
+                previewConfig={{showPreview: false}}
+                height={400}
+             />
+            </div> }
+            <MessageInput ref={textInputRef} input={inputValues} setInput={setInputValues} onSubmit={onSubmit} onEmojiBtnClick={handleEmojiBtnToggle}/>
         </div>
     </div>
   )
@@ -207,10 +234,11 @@ export type MessageInputProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
     input: InputValues,
     setInput: Dispatch<React.SetStateAction<InputValues>>
     onSubmit: () => void
+    onEmojiBtnClick: MouseEventHandler<HTMLButtonElement>
 }
 
 const MessageInput = forwardRef<HTMLTextAreaElement,
-MessageInputProps>(({ input, setInput, onSubmit }: MessageInputProps, ref) => {
+MessageInputProps>(({ input, setInput, onSubmit, onEmojiBtnClick }: MessageInputProps, ref) => {
 
     return (<div className="sticky bottom-0 left-0 bg-background py-3">
         <div className="bg-inherit border-primary border rounded-3xl flex items-center">
@@ -218,7 +246,7 @@ MessageInputProps>(({ input, setInput, onSubmit }: MessageInputProps, ref) => {
             <Button variant="ghost" size="icon" className="size-8">
                 <CiImageOn />
             </Button>
-            <Button variant="ghost" size="icon" className="size-8">
+            <Button variant="ghost" size="icon" className="size-8" onClick={onEmojiBtnClick}>
                 <BsEmojiKiss />
             </Button>
             <Button variant="ghost" size="icon" className="size-8">

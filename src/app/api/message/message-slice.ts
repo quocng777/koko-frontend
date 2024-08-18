@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Message } from "./message-type";
 import { RootState } from "../store";
-import { act } from "react";
 
 const initialState: {[conservation: number]: Message[]} = {};
 

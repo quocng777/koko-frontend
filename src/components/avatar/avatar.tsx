@@ -1,4 +1,4 @@
-import { ImgHTMLAttributes, SyntheticEvent, useState } from "react";
+import { ImgHTMLAttributes, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { tv, VariantProps } from "tailwind-variants"
 import defaultAvatar from "../../assets/default_avatar.png";
