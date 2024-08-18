@@ -48,9 +48,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
     const [ sendMessage ] = useSendMessageMutation();
 
-    const messages = useSelector((state: RootState) => {
-        return state.message;
-    });
+    const messages = useSelector((state: RootState) => state.message[conservation.id]) || [];
 
     const sortedMessages = useMemo(() => {
         return [...messages].filter((message) => message.conservation == conservation.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -104,7 +102,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         sendMessage(rq).unwrap()
         .then((res) => {
             const data = res.data as Message;
-            dispatch(deleteLocalMessage(localMessage.tempId as string));
+            dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId as string}));
             dispatch(addMessage(data));
         }).catch(() => {
             localMessage.hasError = true;
@@ -145,7 +143,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                         createdAt.setSeconds(0);
                         createdAt.setMilliseconds(0);
                         let sender = conservation.participants.find((participant) =>participant.userId == msg.sender) as Participant
-                        let timeString = createdAt.toLocaleString('en-US', {month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true});
+                        let timeString = createdAt.toLocaleString('en-US', {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true});
 
                         if(createdAt.getTime() != lastTime) {
                             showUserInfo = true;
