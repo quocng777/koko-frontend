@@ -5,15 +5,17 @@ export type Message = {
     type: MessageType,
     message: string,
     attachments: Attachment[]
-    createdAt: string
+    createdAt: string,
+    seenAt?: string,
     tempId?: string,
     hasError?: boolean,
 }
 
 export type Attachment = {
-    id: number,
+    id?: number
+    fileName: string,
     url: string,
-    createdAt: Date
+    createdAt?: string
 }
 
 export enum MessageType {
