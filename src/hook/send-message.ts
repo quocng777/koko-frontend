@@ -7,6 +7,7 @@ import { updateLatestMsg } from "../app/api/conservation/conservation-slice";
 import { useSendMessageMutation } from "../app/api/message/message-api-slice";
 import { useMediaUpload } from "./upload-media";
 import { AttachmentInput } from "../features/message/chat-box";
+import { v4 as uuidv4 } from 'uuid';
 
 export type UseSendMessageProps = {
     conservation: Conservation,
@@ -48,7 +49,7 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
             type: messageType,
             attachments: rowAttachments,
             hasError: false,
-            tempId: new Date().toString(),
+            tempId: uuidv4()
         };
     
         dispatch(addLocalMessage(localMessage));
@@ -69,13 +70,15 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
             sendMessage(rq).unwrap()
             .then((res) => {
                 const data = res.data as Message;
-                dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId as string}));
+                dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
                 dispatch(addMessage(data));
             }).catch(() => {
                 localMessage.hasError = true;
             })
 
-        } else if(messageType == MessageType.IMAGE) {
+        } 
+        else if(messageType === MessageType.IMAGE) {
+            console.log(messageType)
             const promises = attachments!.map(img => {
                 async function upAttachment (): Promise<Attachment> {
                     const data = await sendAttachment(img.file!)
@@ -91,15 +94,33 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
             Promise.all(promises)
                 .then((attachments) => {
                     rq.attachments = attachments;
-                    console.log("HELLO" + rq.attachments[0].url)
                     sendMessage(rq).unwrap()
                 .then((res) => {
                     const data = res.data as Message;
-                    dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId as string}));
+                    dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
                     dispatch(addMessage(data));
                 }).catch(() => {
                     localMessage.hasError = true;
             })
+        })} 
+        else {
+            sendAttachment(attachments![0].file)
+                .then(({ url }) => {
+                    const attachment: Attachment = {
+                        fileName: attachments![0].fileName,
+                        url,
+                    }
+                    
+                    rq.attachments = [attachment];
+
+                    sendMessage(rq).unwrap()
+                    .then((res) => {
+                        const data = res.data as Message;
+                        dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
+                        dispatch(addMessage(data));
+                    }).catch(() => {
+                        localMessage.hasError = true;
+                    })
                 })
         }
     }

@@ -15,6 +15,7 @@ export type Attachment = {
     id?: number
     fileName: string,
     url: string,
+    fileType: string,
     createdAt?: string
 }
 

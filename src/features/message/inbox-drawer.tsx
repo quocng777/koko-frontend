@@ -32,7 +32,7 @@ const InboxElement = ({conservation}: {conservation: Conservation}) => {
                     <Avatar size='sm' src={conservation.avatar}/>
                     <div className='max-lg:hidden'>
                         <p className='font-medium'>{conservation.name}</p>
-                        <p className='text-xs font-normal'>{conservation.lastMessage?.message}</p>
+                        <p className='text-xs font-normal'>{conservation.lastMessage?.message || 'Sent an attachment'}</p>
                     </div>
                 </div>
         </div>

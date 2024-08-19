@@ -13,7 +13,14 @@ const messageSlice = createSlice({
             if(!conservation) {
                 conservation = [];
             }
-            conservation.push(action.payload);
+            
+            // check if there is an message existed in the store
+            const msg = conservation.find((msg) => msg.id == action.payload.id);
+            if(msg)
+                return;
+            else {
+                conservation.push(action.payload);
+            }
 
             state[action.payload.conservation] = conservation;
         },
@@ -41,7 +48,7 @@ const messageSlice = createSlice({
             let conservation = state[action.payload.conservation];
             if(!conservation)
                 return;
-            const msgIdx = conservation.findIndex((msg) => msg.tempId as string == action.payload.tempId);
+            const msgIdx = conservation.findIndex((msg) => msg.tempId == action.payload.tempId);
             if(msgIdx != -1) {
                 conservation.splice(msgIdx, 1)
             }
