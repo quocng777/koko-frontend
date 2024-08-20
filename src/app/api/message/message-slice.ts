@@ -54,11 +54,33 @@ const messageSlice = createSlice({
             }
 
             state[action.payload.conservation] = conservation;
+        },
+        updateLocalMessage: (state, action: PayloadAction<{ message: Message, tempId: string}>) => {
+            const receivedMsg = action.payload.message;
+            let conservation = state[action.payload.message.conservation];
+ 
+            const msgIdx = conservation.findIndex((msg) => msg.tempId == action.payload.tempId);
+            const storedMsg = conservation.find(msg => msg.id === action.payload.message.id)!;
+            if(storedMsg) {
+                conservation.splice(msgIdx, 1);
+                return;
+            }
+
+            const msg = conservation[msgIdx];
+
+
+            msg.id = receivedMsg.id;
+            msg.attachments = receivedMsg.attachments;
+            msg.createdAt = receivedMsg.createdAt;
+            msg.message = receivedMsg.message;
+            msg.hasError = undefined;
+            msg.tempId = undefined;
+
         }
     }
 });
 
-export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage } = messageSlice.actions;
+export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage } = messageSlice.actions;
 
 export default messageSlice.reducer;
 

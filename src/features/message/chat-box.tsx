@@ -45,6 +45,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const [ getMessages ] = useLazyGetMessagesQuery();
     const dispatch = useDispatch();
     const [ haveSubmitted, setHasSubmitted ] = useState(false);
+    const [ isFirstScrolledDown, setIsFirstScrolledDown ] = useState(false);
 
     // const [ sendMessage ] = useSendMessageMutation();
 
@@ -53,8 +54,8 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const sendMessage = useSendMessage({ conservation });
 
     const sortedMessages = useMemo(() => {
-        return [...messages].filter((message) => message.conservation == conservation.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    }, [messages])
+        return [ ...messages ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }, [ messages ])
 
     // useEffect(() => {
     //     if(!loadedFull && messages.length <= 1) {
@@ -167,19 +168,31 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
             scrollToNewestMessage();
             setHasSubmitted(false);
         }
-    }, [haveSubmitted]);
+    }, [haveSubmitted, scrollToNewestMessage]);
 
     useEffect(() => {
-    if (messageContainerRef.current) {
-        const container = messageContainerRef.current;
-        container.scrollTop = container.scrollHeight - container.clientHeight;
-      }}, [])
+
+        if( isFirstScrolledDown )
+            return;
+        if( messages.length <= 0 )
+            return;
+
+        if (messageContainerRef.current) {
+            const container = messageContainerRef.current;
+            container.scrollTop = container.scrollHeight - container.clientHeight;
+            setIsFirstScrolledDown(true);
+        }}, [ messages, isFirstScrolledDown ]
+    )
+
+    useEffect(() => {
+        setIsFirstScrolledDown(false);
+    }, [ conservation ])
 
   return (
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
             <ChatBoxHeader conservation={conservation}/>
-            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full flex items-end">
+            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full items-end flex">
                 <ul className="flex flex-col gap-1 max-h-full w-full">
                     {(() => {
                     let prevMessage: Message | null = null;
@@ -201,8 +214,8 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                         </li>
                     })}
                 )()}
+                 <div ref={dummyBottomRef}></div>
                 </ul>
-                <div ref={dummyBottomRef}></div>
             </div>
             { showEmojiPicker && <div className="absolute bottom-16 z-10">
                 <EmojiPicker

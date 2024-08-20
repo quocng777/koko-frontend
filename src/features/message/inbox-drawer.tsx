@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux'
 import { getConservations } from '../../app/api/conservation/conservation-slice'
 import { Avatar } from '../../components/avatar';
 import { Conservation } from '../../app/api/conservation/conservation-type';
+import { useMemo } from 'react';
 
 export type InboxDrawerProps = {
     selected?: number,
@@ -10,12 +11,15 @@ export type InboxDrawerProps = {
 
 const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const conservations = useSelector(getConservations);
-    const sortedConservations = [...conservations].sort((c1, c2) => (c2.lastMessage?.id || 0) - (c1.lastMessage?.id || 0));
+    const sortedConservations = useMemo(() => {
+        return [...conservations].sort((c1, c2) => (new Date(c2.lastMessage!.createdAt).getTime() ?? 0) - (new Date(c1.lastMessage!.createdAt).getTime() ?? 0));
+    }, [ conservations ])
+    // 
 
 
   return (
     <div className='py-8 h-full'>
-        <div className='bg-background h-full rounded-2xl px-2 py-4 shadow-sm lg:min-w-96'>
+        <div className='bg-background h-full rounded-2xl px-2 py-4 shadow-sm lg:min-w-96 transition-all'>
             <h4 className='text-lg mb-4 ms-4 max-lg:hidden'>Messages</h4>
 
             <div className='flex gap-1 flex-col'>

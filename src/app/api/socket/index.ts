@@ -21,8 +21,15 @@ const useSocket = () => {
             client.subscribe(`/user/${user.id}/message`, (message) => {
                 const msg = JSON.parse(message.body) as Message;
 
-                dispatch(addMessage(msg));
-                dispatch(updateLatestMsg(msg));
+                if(msg.sender !== user.id) {
+                    dispatch(addMessage(msg));
+                    dispatch(updateLatestMsg(msg));
+                } else {
+                    setTimeout(() => {
+                        dispatch(addMessage(msg));
+                        dispatch(updateLatestMsg(msg));
+                    }, 50)
+                }
             })
         }
     });

@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Conservation } from "../app/api/conservation/conservation-type";
 import { Attachment, Message, MessageSendParams, MessageType } from "../app/api/message/message-type";
 import { getCurrentAuthentication } from "../app/api/auth/auth-slice";
-import { addLocalMessage, addMessage, deleteLocalMessage } from "../app/api/message/message-slice";
+import { addLocalMessage, addMessage, deleteLocalMessage, updateLocalMessage } from "../app/api/message/message-slice";
 import { updateLatestMsg } from "../app/api/conservation/conservation-slice";
 import { useSendMessageMutation } from "../app/api/message/message-api-slice";
 import { useMediaUpload } from "./upload-media";
@@ -70,8 +70,9 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
             sendMessage(rq).unwrap()
             .then((res) => {
                 const data = res.data as Message;
-                dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
-                dispatch(addMessage(data));
+                // dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
+                // dispatch(addMessage(data));
+                dispatch(updateLocalMessage({message: data, tempId: localMessage.tempId!}));
             }).catch(() => {
                 localMessage.hasError = true;
             })
@@ -98,8 +99,9 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
                     sendMessage(rq).unwrap()
                 .then((res) => {
                     const data = res.data as Message;
-                    dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
-                    dispatch(addMessage(data));
+                    // dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
+                    // dispatch(addMessage(data));
+                    dispatch(updateLocalMessage({message: data, tempId: localMessage.tempId!}));
                 }).catch(() => {
                     localMessage.hasError = true;
             })
@@ -118,8 +120,9 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
                     sendMessage(rq).unwrap()
                     .then((res) => {
                         const data = res.data as Message;
-                        dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
-                        dispatch(addMessage(data));
+                        // dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId!}));
+                        // dispatch(addMessage(data));
+                        dispatch(updateLocalMessage({message: data, tempId: localMessage.tempId!}));
                     }).catch(() => {
                         localMessage.hasError = true;
                     })
