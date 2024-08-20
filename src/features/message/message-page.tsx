@@ -1,20 +1,75 @@
 import { useSelector } from 'react-redux'
-import { Conservation } from '../../app/api/conservation/conservation-type'
+import { Conservation, ConservationType } from '../../app/api/conservation/conservation-type'
 import ChatBox from './chat-box'
 import InboxDrawer from './inbox-drawer'
 import { RootState } from '../../app/api/store'
-
+import { replace, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLazyGetConservationQuery } from '../../app/api/conservation/conservation-api-slice'
+import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 export const MessagePage = () => {
-    const conservation = useSelector((state: RootState) => {
-        return state.conservation
-        .find((conservation) => conservation.id == 12)
-    }) as Conservation
 
-    console.log(conservation)
+    const { consId } = useParams();
+    const [ conservation, setConservation ] = useState<null | Conservation>(null);
+    const conservations = useSelector((state: RootState) => state.conservation);
+    const [ getConservation ] = useLazyGetConservationQuery();
+    const navigate = useNavigate();
+    const [ showStart, setShowStart ] = useState(false);
+    const user = useSelector(getCurrentAuthentication);
+
+    if(consId === 'new') {
+      // handle later
+    }
+
+    useEffect(() => {
+      if(Number(consId)) {
+        const constIdNum = Number(consId);
+        if(!conservation) {
+          getConservation(constIdNum)
+            .unwrap()
+            .then(res => {
+              if(res.data && !conservation) {
+                const cons = res.data;
+                setConservation(cons);
+                setShowStart(false);
+              }
+          })
+          .catch((err) => {
+          })
+        }
+      } else if (consId == 'start') {
+        setShowStart(true);
+      } else {
+        if(conservations && conservations.length > 0) {
+          console.log(consId)
+          navigate(`/messages/${conservations![0].id.toString()}`, {replace: true})
+          setConservation(conservations![0])
+        } else {
+          setShowStart(true);
+        }
+      }
+    }, [ conservations, conservation ]);
+
+    useEffect(() => {
+      if(conservation && !conservation.name) {
+        const recipient = conservation.participants.find(par => par.userId != user.id);
+        setConservation(() => ({
+          ...conservation,
+          name: recipient?.name,
+          avatar: recipient?.userAvatar,
+        }))
+      }
+    }, [ conservation, user ]);
+
+    const handleSelectedInboxChange = (conservation: Conservation) => {
+      setConservation(conservation);
+      navigate(`/messages/${conservation.id}`);
+    }
 
   return (
     <div className='flex w-full'>
-        <InboxDrawer />
+        <InboxDrawer selected={conservation?.id} onChange={handleSelectedInboxChange} />
+        {showStart && <p>New conservation</p>}
         {conservation && <ChatBox conservation={conservation}/>}
     </div>
   )

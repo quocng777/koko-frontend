@@ -17,7 +17,6 @@ import { FaFileAlt } from "react-icons/fa";
 import { MessageItem } from "./message-item";
 import { useSendMessage } from "../../hook/send-message";
 import { MdCancel } from "react-icons/md";
-import { v4 as uuid4 } from 'uuid'
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -57,23 +56,23 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         return [...messages].filter((message) => message.conservation == conservation.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }, [messages])
 
-    useEffect(() => {
-        if(!loadedFull && messages.length <= 1) {
-            let oldestMsg = messages[0];
-            getMessages({conservationId: conservation.id, pageNum: 0, pageSize: 10, beforeMessage: oldestMsg.id as number })
-            .unwrap()
-            .then(api => {
-                let data = api.data as ApiPaging<Message>;
-                if(data.list.length == 0) {
-                    setLoadedFull(true)
-                    return;
-                }
-                if(data?.pageNum || 0 >= (data?.totalPages || 0)) {
-                    setLoadedFull(true);
-                }
-                dispatch(addMessages(data?.list as Message[]));
-            })
-    }}, [])
+    // useEffect(() => {
+    //     if(!loadedFull && messages.length <= 1) {
+    //         let oldestMsg = messages[0];
+    //         getMessages({conservationId: conservation.id, pageNum: 0, pageSize: 10, beforeMessage: oldestMsg.id as number })
+    //         .unwrap()
+    //         .then(api => {
+    //             let data = api.data as ApiPaging<Message>;
+    //             if(data.list.length == 0) {
+    //                 setLoadedFull(true)
+    //                 return;
+    //             }
+    //             if(data?.pageNum || 0 >= (data?.totalPages || 0)) {
+    //                 setLoadedFull(true);
+    //             }
+    //             dispatch(addMessages(data?.list as Message[]));
+    //         })
+    // }}, [])
 
     const onMessageSent = () => {
        setTimeout(() => { setHasSubmitted(true);}, 250)

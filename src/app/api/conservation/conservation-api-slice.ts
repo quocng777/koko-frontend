@@ -1,6 +1,6 @@
 import { apiSlice } from "../base/api-slice";
 import { ApiResponse } from "../base/type";
-import { ConservationResponse } from "./conservation-type";
+import { Conservation, ConservationResponse } from "./conservation-type";
 
 export const conservationApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
@@ -9,8 +9,18 @@ export const conservationApiSlice = apiSlice.injectEndpoints({
                 url: '/conservations',
                 method: 'GET'
             })
+        }),
+        getConservation: builder.query<ApiResponse<Conservation>, number>({
+            query: (consId) => ({
+                url: `/conservations/${consId}`,
+                method: 'GET'
+            })
         })
     })
 });
 
-export const { useGetConservationsQuery, useLazyGetConservationsQuery } = conservationApiSlice;
+export const { 
+    useGetConservationsQuery, 
+    useLazyGetConservationsQuery, 
+    useLazyGetConservationQuery 
+} = conservationApiSlice;

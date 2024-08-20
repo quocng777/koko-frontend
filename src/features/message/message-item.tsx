@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Conservation, Participant } from '../../app/api/conservation/conservation-type'
 import { Message, MessageType } from '../../app/api/message/message-type'
 import { useSelector } from 'react-redux'
@@ -63,7 +63,7 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
         <div 
         className={`${metaData.isMe ? 'justify-self-end' : ''}`}>
             {metaData.showUserInfo && <div className="py-1.5"></div>}
-            <div className="w-full flex">
+            <div className="w-full flex gap-2">
                 {!metaData.isMe && 
                 <div className="w-9">
                     {metaData.showUserInfo && <Avatar size="sm" src={metaData.sender.userAvatar}/>}

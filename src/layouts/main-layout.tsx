@@ -125,7 +125,6 @@ export const MainLayout = () => {
                             <NavLink 
                                 key={item.to} 
                                 to={item.to}
-                                end
                                 className={({isActive}) => twMerge(
                                     'flex items-center gap-6 px-8 py-4 hover:bg-background-hover rounded-3xl transition-all max-md:px-0 max-md:justify-center max-md:rounded-full',
                                     isActive ? 'text-sky-400' : ''

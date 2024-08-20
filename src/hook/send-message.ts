@@ -85,6 +85,7 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
                     return {
                         fileName: img.fileName,
                         url: data.url,
+                        fileType: img.fileType
                     }
                 }
 
@@ -109,6 +110,7 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
                     const attachment: Attachment = {
                         fileName: attachments![0].fileName,
                         url,
+                        fileType: attachments![0].fileType
                     }
                     
                     rq.attachments = [attachment];

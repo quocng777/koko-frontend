@@ -33,12 +33,27 @@ export const router = createBrowserRouter([
             },
             {
                 path: '/messages',
-                lazy: async () => {
-                    const { MessagePage } = await import('../features/message/message-page');
-                    return {
-                        Component: MessagePage
-                    };
-                }
+                element: <Outlet />,
+                children: [
+                    {
+                        index: true,
+                        lazy: async () => {
+                            const { MessagePage } = await import('../features/message/message-page');
+                            return {
+                                Component: MessagePage
+                            };
+                        }
+                    },
+                    {
+                        path: '/messages/:consId',
+                        lazy: async () => {
+                            const { MessagePage } = await import('../features/message/message-page');
+                            return {
+                                Component: MessagePage
+                            };
+                        }
+                    }
+                ]
             },
             {
                 path: '/home',
