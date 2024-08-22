@@ -2,11 +2,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Conservation } from "../../app/api/conservation/conservation-type";
 import { Avatar } from "../../components/avatar";
 import { RootState } from "../../app/api/store";
-import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, TextareaHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, TextareaHTMLAttributes, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLazyGetMessagesQuery } from "../../app/api/message/message-api-slice";
-import { addMessages } from "../../app/api/message/message-slice";
+import { addOldMessages } from "../../app/api/message/message-slice";
 import { Attachment, Message, MessageType } from "../../app/api/message/message-type";
-import { ApiPaging } from "../../app/api/base/type";
 import { Button } from "../../components/buttons/button";
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiKiss } from "react-icons/bs";
@@ -17,6 +16,7 @@ import { FaFileAlt } from "react-icons/fa";
 import { MessageItem } from "./message-item";
 import { useSendMessage } from "../../hook/send-message";
 import { MdCancel } from "react-icons/md";
+import SimpleSpinner from "../../components/spinner/simple-spinner";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -40,40 +40,31 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const textInputRef = useRef<HTMLTextAreaElement | null>(null);
     const dummyBottomRef = useRef<HTMLDivElement | null>(null);
     const messageContainerRef = useRef<HTMLDivElement | null>(null);
+    const oldestMessageRef = useRef<HTMLLIElement | null>(null);
 
-    const [ loadedFull, setLoadedFull ] = useState(false);
     const [ getMessages ] = useLazyGetMessagesQuery();
     const dispatch = useDispatch();
     const [ haveSubmitted, setHasSubmitted ] = useState(false);
     const [ isFirstScrolledDown, setIsFirstScrolledDown ] = useState(false);
+    const topScrollRef = useRef<null | HTMLDivElement>(null);
+    const [ hasOldMessages, setHasOldMessages ] = useState(true);
+    const [ isLoading, setIsLoading ] = useState(false);
+    const [ error, setError ] = useState(false);
 
     // const [ sendMessage ] = useSendMessageMutation();
 
-    const messages = useSelector((state: RootState) => state.message[conservation.id] ?? []);
+    const messages = useSelector((state: RootState) => state.message[conservation.id]);
 
     const sendMessage = useSendMessage({ conservation });
 
     const sortedMessages = useMemo(() => {
-        return [ ...messages ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        if(messages) {
+            return [ ...messages ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        }
+
+        return [];
     }, [ messages ])
 
-    // useEffect(() => {
-    //     if(!loadedFull && messages.length <= 1) {
-    //         let oldestMsg = messages[0];
-    //         getMessages({conservationId: conservation.id, pageNum: 0, pageSize: 10, beforeMessage: oldestMsg.id as number })
-    //         .unwrap()
-    //         .then(api => {
-    //             let data = api.data as ApiPaging<Message>;
-    //             if(data.list.length == 0) {
-    //                 setLoadedFull(true)
-    //                 return;
-    //             }
-    //             if(data?.pageNum || 0 >= (data?.totalPages || 0)) {
-    //                 setLoadedFull(true);
-    //             }
-    //             dispatch(addMessages(data?.list as Message[]));
-    //         })
-    // }}, [])
 
     const onMessageSent = () => {
        setTimeout(() => { setHasSubmitted(true);}, 250)
@@ -174,7 +165,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
         if( isFirstScrolledDown )
             return;
-        if( messages.length <= 0 )
+        if( !messages )
             return;
 
         if (messageContainerRef.current) {
@@ -186,25 +177,75 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
     useEffect(() => {
         setIsFirstScrolledDown(false);
-    }, [ conservation ])
+    }, [ conservation ]);
+
+    useEffect(() => {
+        messageContainerRef.current!.scrollTop = messageContainerRef.current!.scrollTop - 80;
+    }, [ messages ])
+
+    useLayoutEffect(() => {
+        if(isLoading || !hasOldMessages || !messages)
+            return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if(entries[0].isIntersecting) {
+                setIsLoading(true);
+                getMessages({
+                    conservationId: conservation.id,
+                    beforeMessage: messages[0]?.id ?? undefined,
+                    pageNum: 0,
+                    pageSize: 15,
+                })
+                .unwrap()
+                .then(res => {
+                    if((res.data!.pageNum) >= res.data!.totalPages) {
+                        setHasOldMessages(false);
+                    }
+                    const list = [ ...res.data!.list ];
+                    oldestMessageRef.current!.scrollIntoView();
+                    dispatch(addOldMessages(list.reverse()));
+                    setIsLoading(false);
+                    setError(false);
+                })
+                .catch(() => {
+                    setError(true);
+                })
+            }
+        });
+
+        observer.observe(topScrollRef.current!);
+
+        return () => {
+            if (topScrollRef.current) {
+              observer.unobserve(topScrollRef.current);
+            }
+          };
+
+    }, [ isLoading, hasOldMessages, messages ]);
+
+
 
   return (
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
             <ChatBoxHeader conservation={conservation}/>
-            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full items-end flex">
+            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full items-end flex flex-col">
                 <ul className="flex flex-col gap-1 max-h-full w-full">
+                    <div ref={topScrollRef} ></div>
+                    <MessageLoader hasMessages={hasOldMessages} isLoading={isLoading} error={error} />
                     {(() => {
                     let prevMessage: Message | null = null;
             
                     return sortedMessages
-                    .map(msg => {
+                    .map((msg, idx) => {
                         const prev = prevMessage;
                         prevMessage = msg;
                         const latestMessage = sortedMessages[sortedMessages.length - 1];
                         const isLatest = msg == latestMessage;
 
-                        return <li key={msg.id || msg.tempId}>
+                        return <li 
+                            ref = { idx === 0 ?  oldestMessageRef : undefined } 
+                            key={msg.id || msg.tempId}>
                             <MessageItem 
                                 message={msg}
                                 prevMessage={prev}
@@ -391,6 +432,24 @@ const SelectedFile = ({ attachment, onRemove } : { attachment: AttachmentInput, 
                         </div>
             )}
         </div>
+    )
+}
+
+type MessageLoaderProps = {
+    isLoading: boolean,
+    error: boolean,
+    hasMessages: boolean
+}
+
+const MessageLoader = ({ isLoading, error, hasMessages } : MessageLoaderProps ) => {
+
+    return (
+        <div
+        className="w-full min-h-20 flex justify-center items-center shrink-0">
+            { isLoading && <SimpleSpinner />}
+            { error && <p className="text-red-600">Have error when loading</p> }
+            { !hasMessages && <p className="font-medium">There are no old messages</p> }
+    </div>
     )
 }
 

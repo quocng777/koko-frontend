@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Conservation, Participant } from '../../app/api/conservation/conservation-type'
 import { Message, MessageType } from '../../app/api/message/message-type'
 import { useSelector } from 'react-redux'
@@ -23,6 +23,7 @@ type MessageMetaData = {
 export const MessageItem = ({ message, prevMessage, conservation, isLatestMessage }: MessageItemProps) => {
 
     const user = useSelector(getCurrentAuthentication);
+    const [ showStatus, setShowStatus ] = useState(false); // have latency when render status of message
 
     const metaData = useMemo((): MessageMetaData => {
         let isMe = false;
@@ -58,6 +59,12 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
 
     }, [message, prevMessage, conservation])
 
+    useEffect(() => {
+        if(!showStatus) {
+            setTimeout(() => setShowStatus(true), 50)
+        }
+    }, [ message, showStatus ])
+
   return (
     <div className='w-full grid'>
         <div 
@@ -79,8 +86,8 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
             </div>
         </div>
         {/* show message sending status */}
-        {
-                isLatestMessage && metaData.isMe 
+            {
+                showStatus && isLatestMessage && metaData.isMe 
                 && (<MessageSendingStatus message={message}/>) 
             }
             {

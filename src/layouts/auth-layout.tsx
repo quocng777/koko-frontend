@@ -7,7 +7,7 @@ type AuthLayoutProps = {
     title: string
 }
 
-export const AuthLayout = ({ children, title}: AuthLayoutProps) => {
+export const AuthLayout = ({ children}: AuthLayoutProps) => {
     const user = useSelector(getCurrentAuthentication);
     console.log(user);
 

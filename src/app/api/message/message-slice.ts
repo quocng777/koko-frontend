@@ -76,11 +76,18 @@ const messageSlice = createSlice({
             msg.hasError = undefined;
             msg.tempId = undefined;
 
+        },
+        addOldMessages: (state, action: PayloadAction<Message[]>) => {
+            if(!action.payload || action.payload.length == 0)
+                return;
+            const conservationId = action.payload[0].conservation;
+            const storedMessages = state[conservationId] ?? [];
+            state[conservationId] = [...action.payload, ...storedMessages];
         }
     }
 });
 
-export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage } = messageSlice.actions;
+export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage, addOldMessages } = messageSlice.actions;
 
 export default messageSlice.reducer;
 

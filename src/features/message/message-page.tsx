@@ -9,7 +9,8 @@ import { useLazyGetConservationQuery } from '../../app/api/conservation/conserva
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 export const MessagePage = () => {
 
-    const { consId } = useParams();
+    let { consId } = useParams();
+    consId = localStorage.getItem("cachedConservation") ?? undefined;
     const [ conservation, setConservation ] = useState<null | Conservation>(null);
     const conservations = useSelector((state: RootState) => state.conservation);
     const [ getConservation ] = useLazyGetConservationQuery();
@@ -31,6 +32,7 @@ export const MessagePage = () => {
               if(res.data && !conservation) {
                 const cons = res.data;
                 setConservation(cons);
+                localStorage.setItem("cachedConservation", cons.id.toString());
                 setShowStart(false);
               }
           })
@@ -42,8 +44,8 @@ export const MessagePage = () => {
       } else {
         if(conservations && conservations.length > 0) {
           console.log(consId)
-          navigate(`/messages/${conservations![0].id.toString()}`, {replace: true})
-          setConservation(conservations![0])
+          navigate(`/messages/${conservations![conservations.length - 1].id.toString()}`, {replace: true})
+          setConservation(conservations![conservations.length - 1])
         } else {
           setShowStart(true);
         }
@@ -63,6 +65,7 @@ export const MessagePage = () => {
 
     const handleSelectedInboxChange = (conservation: Conservation) => {
       setConservation(conservation);
+      localStorage.setItem("cachedConservation", conservation.id.toString())
       navigate(`/messages/${conservation.id}`);
     }
 
@@ -70,7 +73,7 @@ export const MessagePage = () => {
     <div className='flex w-full'>
         <InboxDrawer selected={conservation?.id} onChange={handleSelectedInboxChange} />
         {showStart && <p>New conservation</p>}
-        {conservation && <ChatBox conservation={conservation}/>}
+        {conservation && <ChatBox key={conservation?.id} conservation={conservation}/>}
     </div>
   )
 }
