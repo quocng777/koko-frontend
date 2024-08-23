@@ -15,9 +15,19 @@ export default {
           DEFAULT: 'rgb(241 245 249)',
           hover: '#e2e8f0',
           active: '#cbd5e1'
+        },
+      }
+    },
+    keyframes: {
+      blink: {
+        '50%': {
+          opacity: 1
         }
       }
     },
+    animation: {
+      'typing': 'blink 1s infinite'
+    }
   },
   plugins: [],
 }

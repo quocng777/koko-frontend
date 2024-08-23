@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
-import { Conservation } from "../../app/api/conservation/conservation-type";
+import { Conservation, Participant } from "../../app/api/conservation/conservation-type";
 import { Avatar } from "../../components/avatar";
 import { RootState } from "../../app/api/store";
-import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, TextareaHTMLAttributes, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, TextareaHTMLAttributes, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLazyGetMessagesQuery } from "../../app/api/message/message-api-slice";
 import { addOldMessages } from "../../app/api/message/message-slice";
 import { Attachment, Message, MessageType } from "../../app/api/message/message-type";
@@ -17,6 +17,8 @@ import { MessageItem } from "./message-item";
 import { useSendMessage } from "../../hook/send-message";
 import { MdCancel } from "react-icons/md";
 import SimpleSpinner from "../../components/spinner/simple-spinner";
+import useSocket, { sendTypingStatus } from "../../app/api/socket";
+import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -50,6 +52,10 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const [ hasOldMessages, setHasOldMessages ] = useState(true);
     const [ isLoading, setIsLoading ] = useState(false);
     const [ error, setError ] = useState(false);
+    const [ addedOldMessages, setAddedOldMessages ] = useState(false)
+    const { client } = useSocket();
+    const [ typingUsers, setTypingUsers ] = useState<Participant[]>([]);
+    const user = useSelector(getCurrentAuthentication);
 
     // const [ sendMessage ] = useSendMessageMutation();
 
@@ -67,7 +73,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
 
     const onMessageSent = () => {
-       setTimeout(() => { setHasSubmitted(true);}, 250)
+       setTimeout(() => { setHasSubmitted(true);}, 100)
     } 
 
     const onSubmit = () => {
@@ -77,40 +83,12 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         const text = textInputRef.current?.value as string
         if(textInputRef.current) {
             textInputRef.current.value = '';
+            handleChangeTyping('');
         }
 
         if(text.trim()) {
-            // const localMessage: Message = {
-            //     id: null,
-            //     conservation: conservation.id,
-            //     sender: user.id,
-            //     message: text,
-            //     createdAt: new Date().toISOString(),
-            //     type: MessageType.TEXT,
-            //     attachments: [],
-            //     hasError: false,
-            //     tempId: new Date().toString(),
-            // };
-    
-            // dispatch(addLocalMessage(localMessage));
-            // dispatch(updateLatestMsg(localMessage));
-            // setHasSubmited(true);
-    
-            // const rq: MessageSendParams = {
-            //     conservation: conservation.id,
-            //     message: text,
-            //     type: MessageType.TEXT
-            // };
-    
-            // sendMessage(rq).unwrap()
-            // .then((res) => {
-            //     const data = res.data as Message;
-            //     dispatch(deleteLocalMessage({conservation: conservation.id, tempId: localMessage.tempId as string}));
-            //     dispatch(addMessage(data));
-            // }).catch(() => {
-            //     localMessage.hasError = true;
-            // })
             sendMessage({ messageType: MessageType.TEXT, text, attachments: [], onSubmit: onMessageSent});
+            
         }
 
         if(attachments.length != 0) {
@@ -134,9 +112,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                         } );
                     }
                 })
-        }
-
-        
+        }        
 
     }
 
@@ -154,37 +130,23 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         setShowEmojiPicker((state) => !state);
     }
 
-    useEffect(() => {
-        if(haveSubmitted == true) {
-            scrollToNewestMessage();
-            setHasSubmitted(false);
+    const handleChangeTyping = useCallback((value: string) => {
+        if(value.length > 0) {
+            sendTypingStatus({conservationId: conservation.id, status: true});
+        } else {
+            sendTypingStatus({conservationId: conservation.id, status: false});
         }
-    }, [haveSubmitted, scrollToNewestMessage]);
+    }, [ client, conservation])
 
     useEffect(() => {
-
-        if( isFirstScrolledDown )
-            return;
-        if( !messages )
-            return;
-
-        if (messageContainerRef.current) {
-            const container = messageContainerRef.current;
-            container.scrollTop = container.scrollHeight - container.clientHeight;
-            setIsFirstScrolledDown(true);
-        }}, [ messages, isFirstScrolledDown ]
-    )
-
-    useEffect(() => {
-        setIsFirstScrolledDown(false);
-    }, [ conservation ]);
-
-    useEffect(() => {
-        messageContainerRef.current!.scrollTop = messageContainerRef.current!.scrollTop - 80;
-    }, [ messages ])
+        if(addedOldMessages) {{
+            messageContainerRef.current!.scrollTop = messageContainerRef.current!.scrollTop - 80;
+            setAddedOldMessages(false);
+        }}
+    }, [ messages, addedOldMessages ])
 
     useLayoutEffect(() => {
-        if(isLoading || !hasOldMessages || !messages)
+        if(isLoading || !hasOldMessages || !messages || !addOldMessages)
             return;
 
         const observer = new IntersectionObserver((entries) => {
@@ -204,6 +166,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     const list = [ ...res.data!.list ];
                     oldestMessageRef.current!.scrollIntoView();
                     dispatch(addOldMessages(list.reverse()));
+                    setAddedOldMessages(true);
                     setIsLoading(false);
                     setError(false);
                 })
@@ -221,7 +184,56 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
             }
           };
 
-    }, [ isLoading, hasOldMessages, messages ]);
+    }, [ isLoading, hasOldMessages, messages, addedOldMessages ]);
+
+    useEffect(() => {
+
+        if( isFirstScrolledDown )
+            return;
+        if( !messages )
+            return;
+
+        if (messageContainerRef.current) {
+            const container = messageContainerRef.current;
+            container.scrollTop = container.scrollHeight - container.clientHeight;
+            setIsFirstScrolledDown(true);
+        }}, [ messages, isFirstScrolledDown ]
+    )
+
+    useEffect(() => {
+        if(haveSubmitted == true) {
+            scrollToNewestMessage();
+            setHasSubmitted(false);
+        }
+    }, [haveSubmitted, scrollToNewestMessage]);
+
+    useEffect(() => {
+        client.subscribe(`/messages/typing/${conservation.id}`, (msg) => {
+            const message: {conservation: number, user: number, status: boolean} = JSON.parse(msg.body);
+            if(user.id == message.user)
+                return;
+
+            const participant = conservation
+                    .participants
+                    .find((participant) => participant.userId == message.user)!;
+
+
+            if(message.status) {
+                setTypingUsers(state => {
+                    const userId =  state.find(elm => elm.userId === message.user);
+                    if(userId)
+                        return state;
+                    else
+                        return [ participant, ...state ];
+
+                });
+            } else {
+                setTypingUsers(state => {
+                    return state.filter(elm => elm.userId != message.user);
+                })
+            }
+        })
+    }, [conservation, user])
 
 
 
@@ -255,6 +267,20 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                         </li>
                     })}
                 )()}
+                    { (typingUsers.length > 0) && 
+                    <li className="flex gap-2 items-center">
+                        <div>
+                            { typingUsers.map( user =>
+                                <Avatar size="sm" src={user.userAvatar} />
+                            ) }
+                        </div>
+                        <div className="flex gap-1 bg-sky-500 px-4 py-3.5 rounded-3xl w-fit">
+                            <div className="size-2 bg-white rounded-full animate-typing opacity-0 transition"></div>
+                            <div className="size-2 bg-white rounded-full animate-typing opacity-0 transition delay-300"></div>
+                            <div className="size-2 bg-white rounded-full animate-typing opacity-0 delay-500"></div>
+                        </div>
+                        <p className="font-medium text-slate-600 text-xs"> {typingUsers[0].name} { typingUsers.length > 1 ? ` and ${typingUsers.length - 1} are typing` : ' is typing' }</p>
+                    </li>}
                  <div ref={dummyBottomRef}></div>
                 </ul>
             </div>
@@ -269,7 +295,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                 height={340}
              />
             </div> }
-            <MessageInput ref={textInputRef} attachments={attachmentsInput} setAttachments={setAttachmentInput}  onSubmit={onSubmit} onEmojiBtnClick={handleEmojiBtnToggle}/>
+            <MessageInput ref={textInputRef} attachments={attachmentsInput} setAttachments={setAttachmentInput}  onSubmit={onSubmit} onEmojiBtnClick={handleEmojiBtnToggle} onChange={handleChangeTyping}/>
         </div>
     </div>
   )
@@ -288,15 +314,16 @@ const ChatBoxHeader = ({conservation}: {conservation: Conservation}) => {
 
 }
 
-export type MessageInputProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+export type MessageInputProps =  {
     attachments: AttachmentInput[],
     setAttachments: Dispatch<React.SetStateAction<AttachmentInput[]>>
     onSubmit: () => void
-    onEmojiBtnClick: MouseEventHandler<HTMLButtonElement>
-}
+    onEmojiBtnClick: MouseEventHandler<HTMLButtonElement>,
+    onChange: (value: string) => void 
+} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange">
 
 const MessageInput = forwardRef<HTMLTextAreaElement,
-MessageInputProps>(({ attachments, setAttachments, onSubmit, onEmojiBtnClick }: MessageInputProps, ref) => {
+MessageInputProps>(({ attachments, setAttachments, onSubmit, onEmojiBtnClick, onChange }: MessageInputProps, ref) => {
 
     const fileInputRef = useRef<null | HTMLInputElement>(null);
 
@@ -313,7 +340,6 @@ MessageInputProps>(({ attachments, setAttachments, onSubmit, onEmojiBtnClick }: 
 
     const handleSubmit = () => {
         onSubmit();
-        fileInputRef.current!.value = '';
     }
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -395,7 +421,7 @@ MessageInputProps>(({ attachments, setAttachments, onSubmit, onEmojiBtnClick }: 
                     <MdOutlineKeyboardVoice />
                 </Button>
             </div>
-            <textarea ref={ref} rows={1} className="w-full resize-none py-2 focus:outline-none bg-inherit" placeholder="Send a message" onKeyDown={handleKeyDown} />
+            <textarea ref={ref} rows={1} className="w-full resize-none py-2 focus:outline-none bg-inherit" placeholder="Send a message" onKeyDown={handleKeyDown} onChange={(e) => onChange(e.target.value)}/>
             <div>
                 <Button variant="ghost" size="icon" className="size-8 mx-2" onClick={handleSubmit}>
                     <LuSendHorizonal />

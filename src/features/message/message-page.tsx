@@ -9,12 +9,17 @@ import { useLazyGetConservationQuery } from '../../app/api/conservation/conserva
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 export const MessagePage = () => {
 
+    const navigate = useNavigate();
+
     let { consId } = useParams();
-    consId = localStorage.getItem("cachedConservation") ?? undefined;
+    const cachedId =localStorage.getItem("cachedConservation") ?? undefined;
+    if(!consId && cachedId) {
+      consId = cachedId;
+      navigate(`/messages/${consId}`)
+    }
     const [ conservation, setConservation ] = useState<null | Conservation>(null);
     const conservations = useSelector((state: RootState) => state.conservation);
     const [ getConservation ] = useLazyGetConservationQuery();
-    const navigate = useNavigate();
     const [ showStart, setShowStart ] = useState(false);
     const user = useSelector(getCurrentAuthentication);
 

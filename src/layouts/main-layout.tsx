@@ -63,7 +63,7 @@ export const MainLayout = () => {
 
     const dispatch = useDispatch();
 
-    const client = useSocket();
+    useSocket();
  
     useEffect(() => {
 
@@ -103,11 +103,6 @@ export const MainLayout = () => {
         }
         fetchConservation()
     }, [isSuccess])
-
-    // active websocket, start listening event coming
-    useEffect(() => {
-        client.activate();
-    }, []);
 
     return (
         <div className="flex min-h-screen w-full">
