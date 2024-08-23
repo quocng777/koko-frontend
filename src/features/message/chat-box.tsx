@@ -19,6 +19,7 @@ import { MdCancel } from "react-icons/md";
 import SimpleSpinner from "../../components/spinner/simple-spinner";
 import useSocket, { sendTypingStatus } from "../../app/api/socket";
 import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
+import { FaArrowDown } from "react-icons/fa6";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -56,6 +57,8 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const { client } = useSocket();
     const [ typingUsers, setTypingUsers ] = useState<Participant[]>([]);
     const user = useSelector(getCurrentAuthentication);
+    const latestMessageRef = useRef<HTMLDivElement | null>(null);
+    const [ showGoDown, setShowGoDown ] = useState(false);
 
     // const [ sendMessage ] = useSendMessageMutation();
 
@@ -235,6 +238,29 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         })
     }, [conservation, user])
 
+    const handleGoDownClick = () => {
+        scrollToNewestMessage()
+    };
+
+    useEffect(() => {
+        if(!messages)
+            return;
+        const observer = new IntersectionObserver((entries) => {
+            if(!entries[0].isIntersecting) {
+                setShowGoDown(true);
+            } else {
+                setShowGoDown(false);
+            }
+        } )
+
+        observer.observe(latestMessageRef.current!);
+
+        return () => {
+            observer.disconnect()
+        }
+
+    }, [ messages ])
+
 
 
   return (
@@ -252,13 +278,13 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     .map((msg, idx) => {
                         const prev = prevMessage;
                         prevMessage = msg;
-                        const latestMessage = sortedMessages[sortedMessages.length - 1];
-                        const isLatest = msg == latestMessage;
+                        const isLatest =  idx === sortedMessages.length - 1;
 
                         return <li 
                             ref = { idx === 0 ?  oldestMessageRef : undefined } 
                             key={msg.id || msg.tempId}>
                             <MessageItem 
+                                ref={ isLatest ? latestMessageRef : undefined }
                                 message={msg}
                                 prevMessage={prev}
                                 conservation={conservation}
@@ -268,10 +294,10 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     })}
                 )()}
                     { (typingUsers.length > 0) && 
-                    <li className="flex gap-2 items-center">
+                    <li className="flex gap-2 items-center mt-2">
                         <div>
                             { typingUsers.map( user =>
-                                <Avatar size="sm" src={user.userAvatar} />
+                                <Avatar key={user.userId} size="sm" src={user.userAvatar} />
                             ) }
                         </div>
                         <div className="flex gap-1 bg-sky-500 px-4 py-3.5 rounded-3xl w-fit">
@@ -294,6 +320,14 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                 previewConfig={{showPreview: false}}
                 height={340}
              />
+            </div> }
+            { showGoDown && <div className="absolute bottom-20 right-1/2 translate-x-1/2">
+                <Button 
+                    size="icon" 
+                    className="bg-slate-600"
+                    onClick={handleGoDownClick}>
+                    <FaArrowDown />
+                </Button>
             </div> }
             <MessageInput ref={textInputRef} attachments={attachmentsInput} setAttachments={setAttachmentInput}  onSubmit={onSubmit} onEmojiBtnClick={handleEmojiBtnToggle} onChange={handleChangeTyping}/>
         </div>

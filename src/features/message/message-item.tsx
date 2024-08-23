@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useState } from 'react'
 import { Conservation, Participant } from '../../app/api/conservation/conservation-type'
 import { Message, MessageType } from '../../app/api/message/message-type'
 import { useSelector } from 'react-redux'
@@ -20,10 +20,9 @@ type MessageMetaData = {
     sender: Participant,
 }
 
-export const MessageItem = ({ message, prevMessage, conservation, isLatestMessage }: MessageItemProps) => {
+export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ message, prevMessage, conservation, isLatestMessage }, ref) => {
 
     const user = useSelector(getCurrentAuthentication);
-    const [ showStatus, setShowStatus ] = useState(false); // have latency when render status of message
 
     const metaData = useMemo((): MessageMetaData => {
         let isMe = false;
@@ -59,14 +58,8 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
 
     }, [message, prevMessage, conservation])
 
-    useEffect(() => {
-        if(!showStatus) {
-            setTimeout(() => setShowStatus(true), 50)
-        }
-    }, [ message, showStatus ])
-
   return (
-    <div className='w-full grid'>
+    <div className='w-full grid' ref={ref}>
         <div 
         className={`${metaData.isMe ? 'justify-self-end' : ''}`}>
             {metaData.showUserInfo && <div className="py-1.5"></div>}
@@ -87,7 +80,7 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
         </div>
         {/* show message sending status */}
             {
-                showStatus && isLatestMessage && metaData.isMe 
+                isLatestMessage && metaData.isMe 
                 && (<MessageSendingStatus message={message}/>) 
             }
             {
@@ -96,7 +89,7 @@ export const MessageItem = ({ message, prevMessage, conservation, isLatestMessag
             }
     </div>
   );
-}
+})
 
 const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message, unShowIfSent?: boolean}) => {
     let messageStatus;
