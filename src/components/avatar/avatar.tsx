@@ -7,6 +7,7 @@ const avatarVariants = tv({
     base: 'rounded-full shrink-0',
     variants: {
         size: {
+            'xs-2': 'size-3',
             sm: 'size-9',
             md: 'size-12',
             lg: 'size-24'

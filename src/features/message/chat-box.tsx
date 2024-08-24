@@ -279,7 +279,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     scrollToNewestMessage();
                 }
                 if(haveNewMsg) {
-                    scrollToNewestMessage();
+                    scrollToNewestMessage()
                     setHaveNewMsg(false);
                 }
                 updateSeenStatus({conservation: conservation.id})

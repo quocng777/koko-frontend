@@ -97,7 +97,7 @@ const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message
         messageStatus = 'Sending';
     } else if (message.hasError) {
         messageStatus = 'Error';
-    } else if (message.seenBy) {
+    } else if (message.seenBy && message.seenBy.length > 0) {
         messageStatus = 'Seen';
     } else 
         messageStatus = 'Sent'

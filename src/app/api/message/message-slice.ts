@@ -101,8 +101,8 @@ const messageSlice = createSlice({
                 return;
 
             conservation.forEach((msg) => {
-                if(msg.id) {
-                    if(!msg.seenBy) {
+                if(msg.id && msg.id <= action.payload.message!) {                    
+                    if(!msg.seenBy || msg.seenBy.length == 0) {
                         msg.seenBy = [action.payload];
                     } 
                     else {
@@ -114,7 +114,6 @@ const messageSlice = createSlice({
                     }
                 }
             })
-
         }
     }
 });
