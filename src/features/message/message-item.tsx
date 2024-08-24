@@ -97,7 +97,7 @@ const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message
         messageStatus = 'Sending';
     } else if (message.hasError) {
         messageStatus = 'Error';
-    } else if (message.seenAt) {
+    } else if (message.seenBy) {
         messageStatus = 'Seen';
     } else 
         messageStatus = 'Sent'
@@ -115,8 +115,10 @@ const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message
 const MessageContent = ( { message, isMe } : { message: Message, isMe?: boolean } ) => {
     if ( message.type == MessageType.TEXT ) {
         return (
-            <div className={`${!isMe ? 'bg-sky-500 text-white': 'bg-slate-600 text-white'}  py-1.5 px-4 rounded-3xl w-fit max-w-64`}>
+            <div className={`${!isMe ? 'bg-sky-500 text-white': 'bg-slate-600 text-white'}  py-1.5 px-4 rounded-3xl w-fit max-w-64 text-wrap`}>
+                <p className='break-all'>
                 {message.message}
+                </p>
             </div>
         )
     } else if (message.type == MessageType.IMAGE ) {

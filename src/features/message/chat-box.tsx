@@ -2,8 +2,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Conservation, Participant } from "../../app/api/conservation/conservation-type";
 import { Avatar } from "../../components/avatar";
 import { RootState } from "../../app/api/store";
-import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, TextareaHTMLAttributes, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLazyGetMessagesQuery } from "../../app/api/message/message-api-slice";
+import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, MutableRefObject, TextareaHTMLAttributes, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLazyGetMessagesQuery, useLazyUpdateSeenStatusQuery } from "../../app/api/message/message-api-slice";
 import { addOldMessages } from "../../app/api/message/message-slice";
 import { Attachment, Message, MessageType } from "../../app/api/message/message-type";
 import { Button } from "../../components/buttons/button";
@@ -20,6 +20,7 @@ import SimpleSpinner from "../../components/spinner/simple-spinner";
 import useSocket, { sendTypingStatus } from "../../app/api/socket";
 import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
+import { useEndpoints } from "../../hook/use-endpoints";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -59,6 +60,9 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const user = useSelector(getCurrentAuthentication);
     const latestMessageRef = useRef<HTMLDivElement | null>(null);
     const [ showGoDown, setShowGoDown ] = useState(false);
+    const EndPoints = useEndpoints();
+    const [ haveNewMsg, setHaveNewMsg ] = useState(false);
+    const [ updateSeenStatus ] = useLazyUpdateSeenStatusQuery();
 
     // const [ sendMessage ] = useSendMessageMutation();
 
@@ -141,6 +145,11 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         }
     }, [ client, conservation])
 
+    // mark you read all unread messages when open the conservation
+    useEffect(() => {
+        updateSeenStatus({conservation: conservation.id});
+    }, [])
+
     useEffect(() => {
         if(addedOldMessages) {{
             messageContainerRef.current!.scrollTop = messageContainerRef.current!.scrollTop - 80;
@@ -210,8 +219,10 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         }
     }, [haveSubmitted, scrollToNewestMessage]);
 
+
+    // handle relevant message events from the socket
     useEffect(() => {
-        client.subscribe(`/messages/typing/${conservation.id}`, (msg) => {
+        const typingSubscribe = client.subscribe(EndPoints.MESSAGE_TYPING(conservation.id.toString()), (msg) => {
             const message: {conservation: number, user: number, status: boolean} = JSON.parse(msg.body);
             if(user.id == message.user)
                 return;
@@ -235,13 +246,27 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     return state.filter(elm => elm.userId != message.user);
                 })
             }
+        });
+
+        const msgSubscribe = client.subscribe(EndPoints.MESSAGE_COME, (msg) => {
+            const message = JSON.parse(msg.body) as Message;
+
+            if(message.sender != user.id) {
+                setHaveNewMsg(true)
+            }
         })
+
+        return () => {
+            typingSubscribe.unsubscribe();
+            msgSubscribe.unsubscribe();
+        }
     }, [conservation, user])
 
     const handleGoDownClick = () => {
         scrollToNewestMessage()
     };
 
+    // handle scroll out of or into the latest message
     useEffect(() => {
         if(!messages)
             return;
@@ -250,6 +275,14 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                 setShowGoDown(true);
             } else {
                 setShowGoDown(false);
+                if(typingUsers.length > 0) {
+                    scrollToNewestMessage();
+                }
+                if(haveNewMsg) {
+                    scrollToNewestMessage();
+                    setHaveNewMsg(false);
+                }
+                updateSeenStatus({conservation: conservation.id})
             }
         } )
 
@@ -259,7 +292,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
             observer.disconnect()
         }
 
-    }, [ messages ])
+    }, [ messages, haveNewMsg, typingUsers ])
 
 
 
@@ -268,9 +301,9 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
             <ChatBoxHeader conservation={conservation}/>
             <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full items-end flex flex-col">
-                <ul className="flex flex-col gap-1 max-h-full w-full">
+                <ul className="flex flex-col gap-1 max-h-full w-full mt-auto">
                     <div ref={topScrollRef} ></div>
-                    <MessageLoader hasMessages={hasOldMessages} isLoading={isLoading} error={error} />
+                    <MessageLoader hasMessages={hasOldMessages} isLoading={isLoading} error={error} messageContainerRef={messageContainerRef} />
                     {(() => {
                     let prevMessage: Message | null = null;
             
@@ -321,13 +354,14 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                 height={340}
              />
             </div> }
-            { showGoDown && <div className="absolute bottom-20 right-1/2 translate-x-1/2">
+            { showGoDown && <div className="absolute bottom-20 right-1/2 translate-x-1/2 flex flex-col items-center">
                 <Button 
                     size="icon" 
                     className="bg-slate-600"
                     onClick={handleGoDownClick}>
                     <FaArrowDown />
                 </Button>
+                {haveNewMsg && <p className="text-xs font-medium text-slate-600">Have new message</p>}
             </div> }
             <MessageInput ref={textInputRef} attachments={attachmentsInput} setAttachments={setAttachmentInput}  onSubmit={onSubmit} onEmojiBtnClick={handleEmojiBtnToggle} onChange={handleChangeTyping}/>
         </div>
@@ -498,17 +532,25 @@ const SelectedFile = ({ attachment, onRemove } : { attachment: AttachmentInput, 
 type MessageLoaderProps = {
     isLoading: boolean,
     error: boolean,
-    hasMessages: boolean
+    hasMessages: boolean,
+    messageContainerRef: MutableRefObject<HTMLDivElement | null>
 }
 
-const MessageLoader = ({ isLoading, error, hasMessages } : MessageLoaderProps ) => {
+const MessageLoader = ({ isLoading, error, hasMessages, messageContainerRef } : MessageLoaderProps ) => {
+
+    var show = false;
+    if(messageContainerRef.current) {
+        var computed = getComputedStyle(messageContainerRef.current);
+        var padding = parseInt(computed.paddingTop) + parseInt(computed.paddingBottom);
+        show = messageContainerRef.current.scrollHeight > messageContainerRef.current.offsetHeight - padding + 100;
+    }
 
     return (
         <div
         className="w-full min-h-20 flex justify-center items-center shrink-0">
             { isLoading && <SimpleSpinner />}
             { error && <p className="text-red-600">Have error when loading</p> }
-            { !hasMessages && <p className="font-medium">There are no old messages</p> }
+            { !hasMessages && show && <p className="font-medium">There are no old messages</p> }
     </div>
     )
 }

@@ -1,9 +1,11 @@
 import { Client } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentAuthentication } from "../auth/auth-slice";
-import { Message } from "../message/message-type";
-import { addMessage } from "../message/message-slice";
+import { Message, MessageSeen } from "../message/message-type";
+import { addMessage, updateSeenStatus } from "../message/message-slice";
 import { updateLatestMsg } from "../conservation/conservation-slice";
+import { useState } from "react";
+import { useEndpoints } from "../../../hook/use-endpoints";
 
 const accessToken = localStorage.getItem("accessToken");
 
@@ -15,6 +17,7 @@ const socket : {
 
 const useSocket = () => {
     const user = useSelector(getCurrentAuthentication);
+    const EndPoints = useEndpoints();
     
     const dispatch = useDispatch();
 
@@ -25,8 +28,7 @@ const useSocket = () => {
                 Authorization: `Bearer ${accessToken}`,
             },
             onConnect: () => {
-                console.log("HELLO")
-                client.subscribe(`/user/${user.id}/message`, (message) => {
+                client.subscribe(EndPoints.MESSAGE_COME, (message) => {
                     const msg = JSON.parse(message.body) as Message;
                     if(msg.sender !== user.id) {
                         dispatch(addMessage(msg));
@@ -38,12 +40,21 @@ const useSocket = () => {
                         }, 50)
                     }
                 })
+
+                client.subscribe(EndPoints.MESSAGE_SEEN, (message) => {
+                    const msg = JSON.parse(message.body) as MessageSeen;
+                    
+                    if(msg.user !== user.id) {
+                        dispatch(updateSeenStatus(msg));
+                    }
+                })
             }
         });
 
         client.activate();
 
         socket.client = client;
+
     }
 
     return { 

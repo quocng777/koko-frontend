@@ -1,6 +1,6 @@
 import { apiSlice } from "../base/api-slice";
 import { ApiPaging, ApiResponse } from "../base/type";
-import { Message, MessageQuery, MessageSendParams } from "./message-type";
+import { Message, MessageQuery, MessageSeen, MessageSendParams } from "./message-type";
 
 
 const messageApi = apiSlice.injectEndpoints({
@@ -27,8 +27,15 @@ const messageApi = apiSlice.injectEndpoints({
                 body: rq,
                 method: 'POST'
             })
+        }),
+        updateSeenStatus: builder.query<ApiResponse<MessageSeen[]>, {conservation: number}>({
+            query: (params) => ({
+                url: '/messages/seen-status',
+                params: params,
+                method: 'GET'
+            })
         })
     })
 });
 
-export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation } = messageApi;
+export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation, useLazyUpdateSeenStatusQuery } = messageApi;

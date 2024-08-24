@@ -6,9 +6,9 @@ export type Message = {
     message: string,
     attachments: Attachment[]
     createdAt: string,
-    seenAt?: string,
     tempId?: string,
     hasError?: boolean,
+    seenBy?: MessageSeen[]
 }
 
 export type Attachment = {
@@ -37,4 +37,11 @@ export type MessageSendParams = {
     message?: string,
     type: MessageType,
     attachments?: Attachment[] 
+}
+
+export type MessageSeen = {
+    user: number,
+    seenAt: string,
+    conservation?: number,
+    message?: number,
 }

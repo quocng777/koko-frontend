@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Message } from "./message-type";
+import { Message, MessageSeen } from "./message-type";
 import { RootState } from "../store";
 
 const initialState: {[conservation: number]: Message[]} = {};
@@ -83,11 +83,43 @@ const messageSlice = createSlice({
             const conservationId = action.payload[0].conservation;
             const storedMessages = state[conservationId] ?? [];
             state[conservationId] = [...action.payload, ...storedMessages];
+        },
+        updateHasErrorLocalMessage: (state, action: PayloadAction< {conservation: number, tempId: string}>) => {
+            const conservation = state[action.payload.conservation];
+ 
+            const storedMsg = conservation.find(msg => msg.tempId === action.payload.tempId);
+            
+            if(storedMsg) {
+                storedMsg.hasError = true;
+            }
+        },
+        updateSeenStatus: (state, action: PayloadAction<MessageSeen>) => {
+            
+            const conservation = state[action.payload.conservation!];
+            
+            if(!conservation)
+                return;
+
+            conservation.forEach((msg) => {
+                if(msg.id) {
+                    if(!msg.seenBy) {
+                        msg.seenBy = [action.payload];
+                    } 
+                    else {
+                        const user = msg.seenBy.find((seen) => seen.user == action.payload.user);
+                        
+                        if(!user) {
+                            msg.seenBy = [ action.payload, ...msg.seenBy ]
+                        }
+                    }
+                }
+            })
+
         }
     }
 });
 
-export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage, addOldMessages } = messageSlice.actions;
+export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage, addOldMessages, updateHasErrorLocalMessage, updateSeenStatus } = messageSlice.actions;
 
 export default messageSlice.reducer;
 

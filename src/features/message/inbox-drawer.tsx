@@ -12,7 +12,13 @@ export type InboxDrawerProps = {
 const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const conservations = useSelector(getConservations);
     const sortedConservations = useMemo(() => {
-        return [...conservations].sort((c1, c2) => (new Date(c2.lastMessage!.createdAt).getTime() ?? 0) - (new Date(c1.lastMessage!.createdAt).getTime() ?? 0));
+        return [...conservations].sort((c1, c2) => {
+            if(!c1.createdAt && c2.createdAt)
+                return 1;
+            else if(c1.createdAt || c2.createdAt)
+                return -1
+            else return new Date(c2.lastMessage!.createdAt).getTime() - new Date(c1.lastMessage!.createdAt).getTime() ?? 0
+        });
     }, [ conservations ])
     // 
 
