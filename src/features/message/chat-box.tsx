@@ -17,11 +17,12 @@ import { MessageItem } from "./message-item";
 import { useSendMessage } from "../../hook/send-message";
 import { MdCancel } from "react-icons/md";
 import SimpleSpinner from "../../components/spinner/simple-spinner";
-import useSocket, { sendTypingStatus } from "../../app/api/socket";
+import useSocket, { sendTypingStatus, topicSubscribe } from "../../app/api/socket";
 import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
 import { useEndpoints } from "../../hook/use-endpoints";
 import { setEmptyUnreadMessage } from "../../app/api/conservation/conservation-slice";
+import { StompSubscription } from "@stomp/stompjs";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -224,7 +225,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
 
     // handle relevant message events from the socket
     useEffect(() => {
-        const typingSubscribe = client.subscribe(EndPoints.MESSAGE_TYPING(conservation.id.toString()), (msg) => {
+        topicSubscribe(EndPoints.MESSAGE_TYPING(conservation.id.toString()), (msg) => {
             const message: {conservation: number, user: number, status: boolean} = JSON.parse(msg.body);
             if(user.id == message.user)
                 return;
@@ -248,20 +249,15 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     return state.filter(elm => elm.userId != message.user);
                 })
             }
-        });
+        })
 
-        const msgSubscribe = client.subscribe(EndPoints.MESSAGE_COME, (msg) => {
+        topicSubscribe(EndPoints.MESSAGE_COME, (msg) => {
             const message = JSON.parse(msg.body) as Message;
 
             if(message.sender != user.id) {
                 setHaveNewMsg(true)
             }
         })
-
-        return () => {
-            typingSubscribe.unsubscribe();
-            msgSubscribe.unsubscribe();
-        }
     }, [conservation, user])
 
     const handleGoDownClick = () => {

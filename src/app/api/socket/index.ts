@@ -1,4 +1,4 @@
-import { Client } from "@stomp/stompjs";
+import { Client, messageCallbackType } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentAuthentication } from "../auth/auth-slice";
 import { Message, MessageSeen } from "../message/message-type";
@@ -61,6 +61,16 @@ const useSocket = () => {
     return { 
         client: socket.client
      };    
+}
+
+export const topicSubscribe = async(topic: string, callback: messageCallbackType) => {
+    while(!socket.client?.connected) {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 100) // stop 100ms to resubscribe
+        })
+    }
+
+    return socket.client.subscribe(topic, callback)
 }
 
 export const sendTypingStatus = ({ conservationId, status }: { conservationId: number, status: boolean }) => {
