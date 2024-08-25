@@ -16,6 +16,7 @@ const sendFile = async (url: string, file: File) => {
 }
 
 export type PresignedUrl = {
+    keyObject: string,
     fileUploadedUrl: string,
     url: string,
 }
@@ -32,6 +33,7 @@ export const useMediaUpload = () => {
 
         if(msg.ok) {
             return {
+                keyObject: preSignedUrl!.keyObject,
                 url: preSignedUrl!.fileUploadedUrl
             };
         } else {

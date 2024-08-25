@@ -2,7 +2,7 @@ import { Client, messageCallbackType } from "@stomp/stompjs";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentAuthentication } from "../auth/auth-slice";
 import { Message, MessageSeen } from "../message/message-type";
-import { addMessage, updateSeenStatus } from "../message/message-slice";
+import { addMessage, updateDeletedMessage, updateSeenStatus } from "../message/message-slice";
 import { increaseUnreadMessage, updateLatestMsg } from "../conservation/conservation-slice";
 import { useState } from "react";
 import { useEndpoints } from "../../../hook/use-endpoints";
@@ -48,6 +48,15 @@ const useSocket = () => {
                     if(msg.user !== user.id) {
                         dispatch(updateSeenStatus(msg));
                     }
+                })
+
+                client.subscribe(EndPoints.MESSAGE_DELETE, (message) => {
+                    const msg = JSON.parse(message.body) as Message;
+                    dispatch(updateDeletedMessage({
+                        conservationId: msg.conservation,
+                        messageId: msg.id!,
+                        deletedAt: msg.deletedAt!,
+                    }))
                 })
             }
         });

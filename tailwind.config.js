@@ -16,18 +16,21 @@ export default {
           hover: '#e2e8f0',
           active: '#cbd5e1'
         },
-      }
-    },
-    keyframes: {
-      blink: {
-        '50%': {
-          opacity: 1
+      },
+      keyframes: {
+        blink: {
+          '50%': {
+            opacity: 1
+          }
         }
+      },
+      animation: {
+        'typing': 'blink 1s infinite'
+      },
+      transitionProperty: {
+        'display': 'display'
       }
     },
-    animation: {
-      'typing': 'blink 1s infinite'
-    }
   },
   plugins: [],
 }

@@ -1,3 +1,4 @@
+import { Api } from "@reduxjs/toolkit/query";
 import { apiSlice } from "../base/api-slice";
 import { ApiPaging, ApiResponse } from "../base/type";
 import { Message, MessageQuery, MessageSeen, MessageSendParams } from "./message-type";
@@ -41,8 +42,14 @@ const messageApi = apiSlice.injectEndpoints({
                 params,
                 method: 'GET'
             })
+        }),
+        unSendMessage: builder.mutation<ApiResponse<Message>, number>({
+            query: (messageId) => ({
+                url: `/messages/${messageId}`,
+                method: 'DELETE'
+            })
         })
     })
 });
 
-export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation, useLazyUpdateSeenStatusQuery, useLazyGetNumUnreadMsgQuery } = messageApi;
+export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation, useLazyUpdateSeenStatusQuery, useLazyGetNumUnreadMsgQuery, useUnSendMessageMutation } = messageApi;

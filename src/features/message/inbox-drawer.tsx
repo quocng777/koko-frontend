@@ -3,6 +3,7 @@ import { getConservations } from '../../app/api/conservation/conservation-slice'
 import { Avatar } from '../../components/avatar';
 import { Conservation } from '../../app/api/conservation/conservation-type';
 import { useMemo } from 'react';
+import { Message, MessageType } from '../../app/api/message/message-type';
 
 export type InboxDrawerProps = {
     selected?: number,
@@ -13,10 +14,10 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const conservations = useSelector(getConservations);
     const sortedConservations = useMemo(() => {
         return [...conservations].sort((c1, c2) => {
-            if(!c1.createdAt && !c2.createdAt)
+            if(!c1.lastMessage && !c2.lastMessage)
                 return 1;
-            else if(!c1.createdAt || !c2.createdAt)
-                return c1.createdAt ? 1 : -1;
+            else if(!c1.lastMessage || !c2.lastMessage)
+                return c1.lastMessage ? -1 : 1;
             else return new Date(c2.lastMessage!.createdAt).getTime() - new Date(c1.lastMessage!.createdAt).getTime()
         });
     }, [ conservations ])
@@ -50,6 +51,17 @@ export type InboxElementProps = {
     onClick: (conservation: Conservation) => void
 }
 
+const getLastMessage = (message: Message | null): string => {
+    if(!message)
+        return "";
+    else if(message.type == MessageType.TEXT)
+        return message.message;
+    else if(message.type == MessageType.DELETED)
+        return 'Deleted a message';
+    else 
+        return 'Send a attachment'
+}
+
 const InboxElement = ({ conservation, isSelected = false, onClick }: InboxElementProps) => {
 
     const handleConservationClick = () => {
@@ -69,7 +81,7 @@ const InboxElement = ({ conservation, isSelected = false, onClick }: InboxElemen
                     <Avatar size='sm' src={conservation.avatar}/>
                     <div className='max-lg:hidden'>
                         <p className='font-medium'>{conservation.name}</p>
-                        <p className='text-xs font-normal'>{conservation.lastMessage && (conservation.lastMessage?.message || 'Sent an attachment')}</p>
+                        <p className='text-xs font-normal'>{getLastMessage(conservation.lastMessage)}</p>
                     </div>
                     { (conservation.unread) > 0 &&
                         <div className='flex-1 max-lg:hidden'>

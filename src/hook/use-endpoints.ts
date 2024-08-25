@@ -8,6 +8,7 @@ export const useEndpoints = () => {
         'MESSAGE_TYPING': (conservationId: string) => {
             return `/messages/typing/${conservationId}`
         },
-        'MESSAGE_SEEN': `/user/${user.id}/seen`,
+        'MESSAGE_SEEN': `/user/${user.id}/message/seen`,
+        'MESSAGE_DELETE': `/user/${user.id}/message/delete`
     }
 };

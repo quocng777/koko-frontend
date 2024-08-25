@@ -8,7 +8,8 @@ export type Message = {
     createdAt: string,
     tempId?: string,
     hasError?: boolean,
-    seenBy?: MessageSeen[]
+    seenBy?: MessageSeen[],
+    deletedAt?: string
 }
 
 export type Attachment = {
@@ -16,6 +17,7 @@ export type Attachment = {
     fileName: string,
     url: string,
     fileType: string,
+    keyObject?: string,
     createdAt?: string
 }
 
@@ -23,7 +25,8 @@ export enum MessageType {
     TEXT = "TEXT",
     IMAGE = "IMAGE",
     VIDEO = "VIDEO",
-    FILE = "FILE"
+    FILE = "FILE",
+    DELETED = "DELETED"
 }
 
 export type MessageQuery = {

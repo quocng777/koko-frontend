@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Message, MessageSeen } from "./message-type";
+import { Message, MessageSeen, MessageType } from "./message-type";
 import { RootState } from "../store";
 
 const initialState: {[conservation: number]: Message[]} = {};
@@ -114,11 +114,25 @@ const messageSlice = createSlice({
                     }
                 }
             })
+        },
+        updateDeletedMessage: (state, action: PayloadAction<{conservationId: number, messageId: number, deletedAt: string}>) => {
+            const conservation = state[action.payload.conservationId];
+
+            if(!conservation)
+                return;
+
+            const storedMsg = conservation.find(msg => msg.id === action.payload.messageId);
+            
+            if(storedMsg) {
+                storedMsg.deletedAt = action.payload.deletedAt;
+                storedMsg.type = MessageType.DELETED;
+            }
+
         }
     }
 });
 
-export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage, addOldMessages, updateHasErrorLocalMessage, updateSeenStatus } = messageSlice.actions;
+export const { addMessage, addMessages, addLocalMessage, deleteLocalMessage, updateLocalMessage, addOldMessages, updateHasErrorLocalMessage, updateSeenStatus, updateDeletedMessage } = messageSlice.actions;
 
 export default messageSlice.reducer;
 

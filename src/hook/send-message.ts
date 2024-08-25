@@ -79,14 +79,14 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
 
         } 
         else if(messageType === MessageType.IMAGE) {
-            console.log(messageType)
             const promises = attachments!.map(img => {
                 async function upAttachment (): Promise<Attachment> {
                     const data = await sendAttachment(img.file!)
                     return {
                         fileName: img.fileName,
                         url: data.url,
-                        fileType: img.fileType
+                        fileType: img.fileType,
+                        keyObject: data.keyObject
                     }
                 }
 
@@ -108,11 +108,12 @@ export const useSendMessage = ({ conservation } : UseSendMessageProps) => {
         })} 
         else {
             sendAttachment(attachments![0].file)
-                .then(({ url }) => {
+                .then(({ url, keyObject }) => {
                     const attachment: Attachment = {
                         fileName: attachments![0].fileName,
                         url,
-                        fileType: attachments![0].fileType
+                        fileType: attachments![0].fileType,
+                        keyObject
                     }
                     
                     rq.attachments = [attachment];

@@ -1,10 +1,14 @@
 import { forwardRef, useEffect, useMemo, useState } from 'react'
 import { Conservation, Participant } from '../../app/api/conservation/conservation-type'
 import { Message, MessageType } from '../../app/api/message/message-type'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 import { Avatar } from '../../components/avatar'
 import { FaFile } from "react-icons/fa6";
+import { Button } from '../../components/buttons/button'
+import { MdDeleteOutline } from "react-icons/md";
+import { useUnSendMessageMutation } from '../../app/api/message/message-api-slice'
+import { updateDeletedMessage } from '../../app/api/message/message-slice'
 
 export type MessageItemProps = {
     message: Message,
@@ -23,6 +27,11 @@ type MessageMetaData = {
 export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ message, prevMessage, conservation, isLatestMessage }, ref) => {
 
     const user = useSelector(getCurrentAuthentication);
+    const dispatch = useDispatch();
+    const sender = useMemo(() => {
+        const user = conservation.participants.find(mem => mem.userId === message.sender)!;
+        return user;
+    }, [ conservation, message])
 
     const metaData = useMemo((): MessageMetaData => {
         let isMe = false;
@@ -56,10 +65,21 @@ export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ messa
             sender
         }
 
-    }, [message, prevMessage, conservation])
+    }, [message, prevMessage, conservation]);
+
+    const [ unSendMessage ] = useUnSendMessageMutation();
+
+    const handleUnsendMessageClick = () => {
+        unSendMessage(message.id!);
+        dispatch(updateDeletedMessage({
+            conservationId: message.conservation,
+            messageId: message.id!,
+            deletedAt: new Date().toISOString()
+        }))
+    }
 
   return (
-    <div className='w-full grid' ref={ref}>
+    <div className='w-full grid group/item' ref={ref}>
         <div 
         className={`${metaData.isMe ? 'justify-self-end' : ''}`}>
             {metaData.showUserInfo && <div className="py-1.5"></div>}
@@ -74,7 +94,19 @@ export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ messa
                             {!metaData.isMe && <p>{metaData.sender.name}</p>}
                             <p className="text-slate-500 pr-2">{metaData.formattedCreatedAt}</p>
                         </div>}
-                    <MessageContent message={ message } isMe={ metaData.isMe }/>
+                    <div className='flex items-center gap-6'>
+                        <div className={`${metaData.isMe ? 'order-2' : 'order-1'}`}>
+                            <MessageContent message={ message } isMe={ metaData.isMe } senderName={ sender.name }/>
+                        </div>
+                        {
+                            message.id && message.type !== MessageType.DELETED && <div className={`opacity-0 group-hover/item:opacity-100 ${metaData.isMe ? 'order-1' : 'order-2'} transition-opacity duration-300`}>
+                            {metaData.isMe && <Button variant='ghost' size='icon'  className={`size-8 shrink-0 hover:text-red-500`}
+                            onClick={handleUnsendMessageClick}>
+                                <MdDeleteOutline />
+                            </Button>}
+                        </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,13 +144,19 @@ const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message
 
 
 // element to show the content of a message
-const MessageContent = ( { message, isMe } : { message: Message, isMe?: boolean } ) => {
-    if ( message.type == MessageType.TEXT ) {
+const MessageContent = ( { message, isMe, senderName } : { message: Message, isMe?: boolean, senderName: string } ) => {
+    if ( message.type == MessageType.TEXT || message.type == MessageType.DELETED ) {
         return (
             <div className={`${!isMe ? 'bg-sky-500 text-white': 'bg-slate-600 text-white'}  py-1.5 px-4 rounded-3xl w-fit max-w-64 text-wrap`}>
-                <p className='break-all'>
-                {message.message}
-                </p>
+                {
+                    message.type == MessageType.TEXT ?
+                    <p className='break-all'>
+                    {message.message}
+                    </p> :
+                    <p className='break-all italic'>
+                    {isMe ? 'You deleted this message' : `${senderName + ' deleted this message'}`}
+                    </p> 
+                }
             </div>
         )
     } else if (message.type == MessageType.IMAGE ) {
