@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import { ConservationType } from "../app/api/conservation/conservation-type";
 import defaultUserImage from "../assets/default_avatar.png";
 import { addConservation, clearConservations } from "../app/api/conservation/conservation-slice";
-import { useLazyGetLatestMessageQuery } from "../app/api/message/message-api-slice";
+import { useLazyGetLatestMessageQuery, useLazyGetNumUnreadMsgQuery } from "../app/api/message/message-api-slice";
 import { Message } from "../app/api/message/message-type";
 import { addMessage } from "../app/api/message/message-slice";
 import useSocket from "../app/api/socket";
@@ -61,6 +61,8 @@ export const MainLayout = () => {
 
     const [ getLatestMessage ] = useLazyGetLatestMessageQuery();
 
+    const [ getNumUnreadMessage ] = useLazyGetNumUnreadMsgQuery();
+
     const dispatch = useDispatch();
 
     useSocket();
@@ -84,17 +86,21 @@ export const MainLayout = () => {
                     }
     
                     let latestMessage;
+                    let unread = 0;
     
                     try {
                         latestMessage = (await getLatestMessage({conservation: conservation.id}).unwrap()).data;
                         dispatch(addMessage(latestMessage as Message))
+
+                        unread = (await getNumUnreadMessage({conservation: conservation.id}).unwrap()).data as number;
                     } catch(exc) {
                         latestMessage = null;
                     }
     
                     const transformedCons =  {
                         ...formatConservation,
-                        lastMessage: latestMessage
+                        lastMessage: latestMessage,
+                        unread
                     }
 
                     dispatch(addConservation(transformedCons))

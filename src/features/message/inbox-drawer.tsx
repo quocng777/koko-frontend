@@ -13,11 +13,11 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const conservations = useSelector(getConservations);
     const sortedConservations = useMemo(() => {
         return [...conservations].sort((c1, c2) => {
-            if(!c1.createdAt && c2.createdAt)
+            if(!c1.createdAt && !c2.createdAt)
                 return 1;
-            else if(c1.createdAt || c2.createdAt)
-                return -1
-            else return new Date(c2.lastMessage!.createdAt).getTime() - new Date(c1.lastMessage!.createdAt).getTime() ?? 0
+            else if(!c1.createdAt || !c2.createdAt)
+                return c1.createdAt ? 1 : -1;
+            else return new Date(c2.lastMessage!.createdAt).getTime() - new Date(c1.lastMessage!.createdAt).getTime()
         });
     }, [ conservations ])
     // 
@@ -71,6 +71,13 @@ const InboxElement = ({ conservation, isSelected = false, onClick }: InboxElemen
                         <p className='font-medium'>{conservation.name}</p>
                         <p className='text-xs font-normal'>{conservation.lastMessage && (conservation.lastMessage?.message || 'Sent an attachment')}</p>
                     </div>
+                    { (conservation.unread) > 0 &&
+                        <div className='flex-1 max-lg:hidden'>
+                            <div className='bg-red-500 size-6 rounded-full text-xs font-medium text-white flex items-center justify-center ml-auto'>
+                                {conservation.unread}
+                        </div>
+                    </div>
+                    }
                 </div>
         </div>
     )

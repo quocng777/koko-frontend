@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getCurrentAuthentication } from "../auth/auth-slice";
 import { Message, MessageSeen } from "../message/message-type";
 import { addMessage, updateSeenStatus } from "../message/message-slice";
-import { updateLatestMsg } from "../conservation/conservation-slice";
+import { increaseUnreadMessage, updateLatestMsg } from "../conservation/conservation-slice";
 import { useState } from "react";
 import { useEndpoints } from "../../../hook/use-endpoints";
 
@@ -33,6 +33,7 @@ const useSocket = () => {
                     if(msg.sender !== user.id) {
                         dispatch(addMessage(msg));
                         dispatch(updateLatestMsg(msg));
+                        dispatch(increaseUnreadMessage(msg.conservation))
                     } else {
                         setTimeout(() => {
                             dispatch(addMessage(msg));

@@ -21,6 +21,7 @@ import useSocket, { sendTypingStatus } from "../../app/api/socket";
 import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
 import { useEndpoints } from "../../hook/use-endpoints";
+import { setEmptyUnreadMessage } from "../../app/api/conservation/conservation-slice";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -148,6 +149,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     // mark you read all unread messages when open the conservation
     useEffect(() => {
         updateSeenStatus({conservation: conservation.id});
+        dispatch(setEmptyUnreadMessage(conservation.id));
     }, [])
 
     useEffect(() => {
@@ -283,6 +285,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
                     setHaveNewMsg(false);
                 }
                 updateSeenStatus({conservation: conservation.id})
+                dispatch(setEmptyUnreadMessage(conservation.id));
             }
         } )
 

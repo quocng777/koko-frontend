@@ -24,12 +24,25 @@ const conservationSlice = createSlice({
             if(conservation) {
                 conservation.lastMessage = action.payload;
             }
+        },
+        increaseUnreadMessage: (state, action: PayloadAction<number>) => {
+            let conservation = state.find((cons) => cons.id === action.payload);
+            if(!conservation)
+                return;
+
+            conservation.unread += 1;
+        },
+        setEmptyUnreadMessage: (state, action: PayloadAction<number>) => {
+            let conservation = state.find((cons) => cons.id === action.payload);
+            if(!conservation)
+                return;
+            conservation.unread = 0;
         }
     }
 }
 )
 
-export const { addConservation, addConservations, clearConservations, updateLatestMsg } = conservationSlice.actions;
+export const { addConservation, addConservations, clearConservations, updateLatestMsg, increaseUnreadMessage, setEmptyUnreadMessage } = conservationSlice.actions;
 export default conservationSlice.reducer;
 
 export const getConservations = (state: any): Conservation[] => {

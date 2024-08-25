@@ -34,8 +34,15 @@ const messageApi = apiSlice.injectEndpoints({
                 params: params,
                 method: 'GET'
             })
+        }),
+        getNumUnreadMsg: builder.query<ApiResponse<number>, { conservation: number }>({
+            query: (params) => ({
+                url: '/messages/unseen',
+                params,
+                method: 'GET'
+            })
         })
     })
 });
 
-export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation, useLazyUpdateSeenStatusQuery } = messageApi;
+export const { useLazyGetLatestMessageQuery, useLazyGetMessagesQuery, useSendMessageMutation, useLazyUpdateSeenStatusQuery, useLazyGetNumUnreadMsgQuery } = messageApi;
