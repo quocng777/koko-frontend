@@ -58,15 +58,36 @@ export const router = createBrowserRouter([
             {
                 path: '/home',
                 element: <div>HOME</div>
+            },
+            {
+                path: '/friends',
+                lazy: async () => {
+                    const { FriendPage } = await import('../features/friend/friend-page');
+
+                    return {
+                        Component: FriendPage
+                    }
+                },
+                children: [
+                    {
+                        index: true,
+                        lazy: async () => {
+                            const { FriendTab } = await import('../features/friend/friend-tab');
+                            return {
+                                Component: FriendTab
+                            }
+                        }
+                    },
+                    {
+                        path: 'requests',
+                        element: <div>Friend Request</div>
+                    },
+                    {
+                        path: 'suggestion',
+                        element: <div>Suggestion</div>
+                    }
+                ]
             }
-            // {
-            //     path: '/messages',
-            //     lazy: async() => {
-            //         return {
-            //             Component: 
-            //         }
-            //     }
-            // }
         ]
     }
 ]);

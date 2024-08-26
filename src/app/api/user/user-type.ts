@@ -10,3 +10,11 @@ export type User = {
     createAt: Date,
     verified: boolean
 }
+
+export type UserContact = {
+    id: number,
+    username: string,
+    name: string,
+    avatar?: string,
+    isFriend?: boolean
+}

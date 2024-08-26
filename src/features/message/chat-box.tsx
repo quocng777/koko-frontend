@@ -299,7 +299,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
             <ChatBoxHeader conservation={conservation}/>
-            <div ref={messageContainerRef} className="mb-4 overflow-y-scroll h-full items-end flex flex-col">
+            <div ref={messageContainerRef} className="mb-4 overflow-y-auto h-full items-end flex flex-col">
                 <ul className="flex flex-col gap-1 max-h-full w-full mt-auto">
                     <div ref={topScrollRef} ></div>
                     <MessageLoader hasMessages={hasOldMessages} isLoading={isLoading} error={error} messageContainerRef={messageContainerRef} />
@@ -467,7 +467,7 @@ MessageInputProps>(({ attachments, setAttachments, onSubmit, onEmojiBtnClick, on
 
     return (<div className="sticky bottom-0 left-0 bg-background py-3">
        {
-            attachments.length != 0 && <div className="absolute bg-background-active w-full h-24 -top-[110%] rounded-xl flex items-center gap-2 px-4 overflow-x-scroll bg-opacity-85">
+            attachments.length != 0 && <div className="absolute bg-background-active w-full h-24 -top-[110%] rounded-xl flex items-center gap-2 px-4 bg-opacity-85">
             {attachments.map(atm => {
                 return (
                     <SelectedFile key={atm.fileName} attachment={atm} onRemove={() => handleRemoveSelectedFile(atm)} />

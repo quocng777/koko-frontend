@@ -111,27 +111,27 @@ export const MainLayout = () => {
     }, [isSuccess])
 
     return (
-        <div className="flex min-h-screen w-full">
-            <header>
-                <div className="flex flex-col gap-6 w-[24rem] py-8 mb-8 px-8 h-full max-md:w-36">
-                    <NavLink to={'/user'} className="bg-background px-12 py-6 rounded-2xl flex gap-4 hover:bg-background-hover cursor-pointer shadow-sm items-center max-md:px-0 max-md:justify-center">
+        <div className="flex w-full">
+            <header className="max-h-screen shrink-0 h-screen w-[24rem] max-lg:w-36">
+                <div className="flex flex-col gap-6 w-[24rem] max-lg:w-36 py-8 px-8 h-full fixed  overflow-y-auto">
+                    <NavLink to={'/user'} className="bg-background px-12 py-6 rounded-2xl flex gap-4 hover:bg-background-hover cursor-pointer shadow-sm items-center max-lg:px-0 max-lg:justify-center">
                             <Avatar src={user.avatar}/>
-                            <div className="max-md:hidden">
+                            <div className="max-lg:hidden">
                                 <p className="font-bold mb-2">{user.name}</p>
                                 <p className="text-gray-500">@{user.username}</p>
                             </div>
                     </NavLink>
-                    <nav className="flex flex-col bg-background px-4 py-4 rounded-2xl text-xl shadow-sm flex-1 max-md:px-2 font-medium">
+                    <nav className="flex flex-col bg-background px-4 py-4 rounded-2xl text-xl shadow-sm flex-1 max-lg:px-2 font-medium">
                         {navigation.map(item => (
                             <NavLink 
                                 key={item.to} 
                                 to={item.to}
                                 className={({isActive}) => twMerge(
-                                    'flex items-center gap-6 px-8 py-4 hover:bg-background-hover rounded-3xl transition-all max-md:px-0 max-md:justify-center max-md:rounded-full',
+                                    'flex items-center gap-6 px-8 py-4 hover:bg-background-hover rounded-3xl transition-all max-lg:px-0 max-lg:justify-center max-lg:rounded-full',
                                     isActive ? 'text-sky-400' : ''
                                 )}>
                                 <item.icon className="shrink-0"/>
-                                <span className="max-md:hidden">{item.name}</span>
+                                <span className="max-lg:hidden">{item.name}</span>
                             </NavLink>
                         ))}
                     </nav>
