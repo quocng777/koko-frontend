@@ -1,4 +1,3 @@
-import { number } from "zod";
 import { apiSlice } from "../base/api-slice";
 import { ApiPaging, ApiResponse } from "../base/type";
 import { User, UserContact } from "./user-type";
@@ -18,9 +17,36 @@ const userApiSlice = apiSlice.injectEndpoints({
                     url: '/users/friends',
                     method: 'GET',
                 })
+            }),
+            checkFriendStatus: builder.query<ApiResponse<UserContact>, number>({
+                query: (params) => {
+                    return {
+                        url: '/users/friend-status',
+                        params: {friendId: params},
+                        method: 'GET',
+                    }
+                }
+            }),
+            requestFriend: builder
+            .query<ApiResponse<UserContact>, number>({
+                query: (friendId) => ({
+                    url: '/users/friends/request',
+                    params: {
+                        friendId,
+                    },
+                    method: 'GET'
+                })
             })
         }
     ),
 });
 
-export const { useGetAuthenticationQuery, useLazyGetAuthenticationQuery, useGetFriendsQuery, useLazyGetFriendsQuery } = userApiSlice;
+export const { 
+    useGetAuthenticationQuery, 
+    useLazyGetAuthenticationQuery, 
+    useGetFriendsQuery, 
+    useLazyGetFriendsQuery, 
+    useCheckFriendStatusQuery, 
+    useLazyCheckFriendStatusQuery,
+    useLazyRequestFriendQuery
+ } = userApiSlice;

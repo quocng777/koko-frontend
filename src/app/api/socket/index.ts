@@ -4,8 +4,9 @@ import { getCurrentAuthentication } from "../auth/auth-slice";
 import { Message, MessageSeen } from "../message/message-type";
 import { addMessage, updateDeletedMessage, updateSeenStatus } from "../message/message-slice";
 import { increaseUnreadMessage, updateLatestMsg } from "../conservation/conservation-slice";
-import { useState } from "react";
 import { useEndpoints } from "../../../hook/use-endpoints";
+import { Notification } from "../notification/notification-type";
+import { increaseNotification } from "../notification/notification-slice";
 
 const accessToken = localStorage.getItem("accessToken");
 
@@ -57,6 +58,11 @@ const useSocket = () => {
                         messageId: msg.id!,
                         deletedAt: msg.deletedAt!,
                     }))
+                })
+
+                client.subscribe(EndPoints.NOTIFICATION, (message) => {
+                    let notification = JSON.parse(message.body) as Notification;
+                    dispatch(increaseNotification())
                 })
             }
         });

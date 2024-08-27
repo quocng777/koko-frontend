@@ -16,5 +16,12 @@ export type UserContact = {
     username: string,
     name: string,
     avatar?: string,
-    isFriend?: boolean
+    friendStatus?: FriendStatus
+}
+
+export enum FriendStatus {
+    FRIEND = "FRIEND",
+    SENDED_REQUEST = "SENDED_REQUEST",
+    RECEIVED_REQUEST = "RECEIVED_REQUEST",
+    STRANGER = "STRANGER",
 }

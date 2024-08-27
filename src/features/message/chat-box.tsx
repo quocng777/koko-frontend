@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
-import { Conservation, Participant } from "../../app/api/conservation/conservation-type";
+import { Conservation, ConservationType, Participant } from "../../app/api/conservation/conservation-type";
 import { Avatar } from "../../components/avatar";
 import { RootState } from "../../app/api/store";
-import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, MutableRefObject, TextareaHTMLAttributes, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Dispatch, forwardRef, KeyboardEvent, MouseEventHandler, MutableRefObject, SetStateAction, TextareaHTMLAttributes, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLazyGetMessagesQuery, useLazyUpdateSeenStatusQuery } from "../../app/api/message/message-api-slice";
 import { addOldMessages } from "../../app/api/message/message-slice";
 import { Attachment, Message, MessageType } from "../../app/api/message/message-type";
@@ -22,7 +22,9 @@ import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
 import { useEndpoints } from "../../hook/use-endpoints";
 import { setEmptyUnreadMessage } from "../../app/api/conservation/conservation-slice";
-import { StompSubscription } from "@stomp/stompjs";
+import { useLazyCheckFriendStatusQuery, useLazyRequestFriendQuery } from "../../app/api/user/user-api-slice";
+import { FriendStatus, UserContact } from "../../app/api/user/user-type";
+import  { CiWarning } from "react-icons/ci";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -65,6 +67,8 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const EndPoints = useEndpoints();
     const [ haveNewMsg, setHaveNewMsg ] = useState(false);
     const [ updateSeenStatus ] = useLazyUpdateSeenStatusQuery();
+    const [ checkFriendStatus ] = useLazyCheckFriendStatusQuery();
+    const [ userContact, setUserContact ] = useState<UserContact | null>(null);
 
     // const [ sendMessage ] = useSendMessageMutation();
 
@@ -146,6 +150,22 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
             sendTypingStatus({conservationId: conservation.id, status: false});
         }
     }, [ client, conservation])
+
+    // show friend status if the conservation is message direct type
+    useEffect(() => {
+        if(conservation.type == ConservationType.SINGLE) {
+            const recipient = conservation
+                    .participants
+                    .filter((mem) => mem.userId !== user.id)[0]!;
+            checkFriendStatus(recipient.userId)
+                .unwrap()
+                .then((res) => {
+                    if(res.data) {
+                        setUserContact(res.data);
+                    }
+                });
+        }
+    }, [])
 
     // mark you read all unread messages when open the conservation
     useEffect(() => {
@@ -299,6 +319,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
             <ChatBoxHeader conservation={conservation}/>
+            { userContact && userContact.friendStatus != 'FRIEND' && <ShowFriendStatus userContact={userContact} setUserContact={setUserContact}/>}
             <div ref={messageContainerRef} className="mb-4 overflow-y-auto h-full items-end flex flex-col">
                 <ul className="flex flex-col gap-1 max-h-full w-full mt-auto">
                     <div ref={topScrollRef} ></div>
@@ -551,6 +572,48 @@ const MessageLoader = ({ isLoading, error, hasMessages, messageContainerRef } : 
             { error && <p className="text-red-600">Have error when loading</p> }
             { !hasMessages && show && <p className="font-medium">There are no old messages</p> }
     </div>
+    )
+}
+
+type ShowFriendStatusProps = {
+    userContact: UserContact,
+    setUserContact: SetStateAction<any>
+}
+
+const ShowFriendStatus = ({ userContact, setUserContact }: ShowFriendStatusProps) => {
+
+    const [ addFriend ] = useLazyRequestFriendQuery();
+
+    const handleAddFriendClick = () => {
+        addFriend(userContact.id);
+        setUserContact({
+            ...userContact,
+            friendStatus: FriendStatus.SENDED_REQUEST
+        });
+    };
+
+    return (
+        <div className="flex items-center justify-between pb-2">
+                <div className="flex items-center">
+                    <CiWarning className="text-red-600"/>
+                    <span className="text-xs font-medium ml-1">
+                        {
+                        `${userContact.name}
+                        ${userContact.friendStatus == 'RECEIVED_REQUEST' ? ' sent your friend request' : ' is not your friend'}
+                        `}</span>
+                </div>
+                <div>
+                    { userContact.friendStatus == 'STRANGER' && <Button className="text-sm bg-sky-500 bg-opacity-85 py-1.5 mr-2" onClick={handleAddFriendClick}>
+                        Add friend
+                    </Button> }
+                    { userContact.friendStatus == 'RECEIVED_REQUEST' && <Button className="text-sm bg-sky-500 bg-opacity-85 py-1.5 mr-2">
+                        Accept
+                    </Button> }
+                    <Button className="text-sm bg-red-500 bg-opacity-80 py-1.5" >
+                        Block
+                    </Button>
+                </div>
+            </div>
     )
 }
 
