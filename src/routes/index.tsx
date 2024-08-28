@@ -2,12 +2,15 @@ import { createBrowserRouter, Navigate, Outlet, useLocation } from "react-router
 import { getCurrentAuthentication } from "../app/api/auth/auth-slice";
 import { useSelector } from "react-redux";
 import { MainLayout } from "../layouts/main-layout";
+import { ToastProvider } from "../app/context/toast-provider";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const user = useSelector(getCurrentAuthentication);
     const location = useLocation();
 
-    return user ? <>{children}</> : <Navigate to={`/login?redirectTo=${encodeURIComponent(location.pathname)}`} replace></Navigate>
+    return user ? <ToastProvider>
+        <>{children}</>
+    </ToastProvider> : <Navigate to={`/login?redirectTo=${encodeURIComponent(location.pathname)}`} replace></Navigate>
 }
 
 export const router = createBrowserRouter([
@@ -80,13 +83,29 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: 'requests',
-                        element: <div>Friend Request</div>
+                        lazy: async() => {
+                            const { FriendRequestTab } = await import('../features/friend/friend-request-tab')
+
+                            return {
+                                Component: FriendRequestTab
+                            }
+                        }
                     },
                     {
                         path: 'suggestion',
                         element: <div>Suggestion</div>
                     }
                 ]
+            },
+            {
+                path: '/notifications',
+                lazy: async() => {
+                    const { NotificationPage } = await import('../features/notification/notification-page');
+
+                    return {
+                        Component: NotificationPage
+                    }
+                }
             }
         ]
     }

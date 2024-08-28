@@ -21,6 +21,7 @@ import useSocket from "../app/api/socket";
 import { useGetNumNotificationQuery } from "../app/api/notification/notification-api-slice";
 import { setNumNotification } from "../app/api/notification/notification-slice";
 import { RootState } from "../app/api/store";
+import { ToastProvider } from "../app/context/toast-provider";
 
 type SideNavigationItem = {
     name: string,
@@ -122,7 +123,7 @@ export const MainLayout = () => {
     }, [isGetNotiSuccess, numNotification])
 
     return (
-        <div className="flex w-full">
+            <div className="flex w-full">
             <header className="max-h-screen shrink-0 h-screen w-[24rem] max-lg:w-36">
                 <div className="flex flex-col gap-6 w-[24rem] max-lg:w-36 py-8 px-8 h-full fixed  overflow-y-auto">
                     <NavLink to={'/user'} className="bg-background px-12 py-6 rounded-2xl flex gap-4 hover:bg-background-hover cursor-pointer shadow-sm items-center max-lg:px-0 max-lg:justify-center">

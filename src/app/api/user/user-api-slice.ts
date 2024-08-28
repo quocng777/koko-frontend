@@ -1,6 +1,6 @@
 import { apiSlice } from "../base/api-slice";
 import { ApiPaging, ApiResponse } from "../base/type";
-import { User, UserContact } from "./user-type";
+import { User, UserContact, UserFriend } from "./user-type";
 
 const userApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => (
@@ -36,6 +36,13 @@ const userApiSlice = apiSlice.injectEndpoints({
                     },
                     method: 'GET'
                 })
+            }),
+            getReceivedFriendRequests: builder.query<ApiResponse<ApiPaging<UserFriend>>, {pageSize: number, pageNum: number}>({
+                query: (params) => ({
+                    url: '/users/friends/received-requests',
+                    params,
+                    method: 'GET'
+                })
             })
         }
     ),
@@ -48,5 +55,6 @@ export const {
     useLazyGetFriendsQuery, 
     useCheckFriendStatusQuery, 
     useLazyCheckFriendStatusQuery,
-    useLazyRequestFriendQuery
+    useLazyRequestFriendQuery,
+    useGetReceivedFriendRequestsQuery
  } = userApiSlice;

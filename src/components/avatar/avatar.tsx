@@ -8,6 +8,7 @@ const avatarVariants = tv({
     variants: {
         size: {
             'xs-2': 'size-3',
+            'xs': 'size-6',
             sm: 'size-9',
             md: 'size-12',
             lg: 'size-24'
@@ -32,7 +33,7 @@ export const Avatar = ({size, center, className, src, ...props} : AvatarProps) =
     return (
         <div className={
             twMerge(avatarVariants({size, center}),
-            !loaded ? 'bg-gray-600' : ''
+            !loaded ? 'bg-gray-600' : '', className
         )
         } {...props}>
             <img src={src || defaultAvatar} onLoad={handleLoaded}/>

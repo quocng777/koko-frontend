@@ -2,12 +2,12 @@ import { UserContact } from "../user/user-type";
 
 export type Notification = {
     id: number,
-    publisherUser: UserContact,
+    publishedUser: UserContact,
     recipient: number,
     objectUrl: string,
     objectId: number,
-    seenAt: string,
-    dismissedAt: string,
+    seenAt?: string,
+    dismissedAt?: string,
     createdAt: string,
     type: NotificationType
 }
@@ -15,4 +15,10 @@ export type Notification = {
 export enum NotificationType {
     FRIEND_REQUEST = "FRIEND_REQUEST",
     FRIEND_ACCEPT = "FRIEND_ACCEPT",
+}
+
+export type NotificationQuery = {
+    pageNum: number,
+    pageSize: number,
+    beforeId?: number
 }

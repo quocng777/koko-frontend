@@ -7,6 +7,7 @@ import { increaseUnreadMessage, updateLatestMsg } from "../conservation/conserva
 import { useEndpoints } from "../../../hook/use-endpoints";
 import { Notification } from "../notification/notification-type";
 import { increaseNotification } from "../notification/notification-slice";
+import { useToast } from "../../../hook/use-toast";
 
 const accessToken = localStorage.getItem("accessToken");
 
@@ -19,7 +20,7 @@ const socket : {
 const useSocket = () => {
     const user = useSelector(getCurrentAuthentication);
     const EndPoints = useEndpoints();
-    
+    const toast = useToast();
     const dispatch = useDispatch();
 
     if(!socket.client) {
@@ -62,7 +63,10 @@ const useSocket = () => {
 
                 client.subscribe(EndPoints.NOTIFICATION, (message) => {
                     let notification = JSON.parse(message.body) as Notification;
-                    dispatch(increaseNotification())
+                    dispatch(increaseNotification());
+                    console.log(toast.open)
+                    toast.open(notification);
+
                 })
             }
         });

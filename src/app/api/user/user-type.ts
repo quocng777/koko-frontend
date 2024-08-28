@@ -25,3 +25,9 @@ export enum FriendStatus {
     RECEIVED_REQUEST = "RECEIVED_REQUEST",
     STRANGER = "STRANGER",
 }
+
+export type UserFriend = {
+    relatedUser: UserContact,
+    friendStatus: FriendStatus,
+    createdAt: string,
+}
