@@ -22,7 +22,7 @@ import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
 import { useEndpoints } from "../../hook/use-endpoints";
 import { setEmptyUnreadMessage } from "../../app/api/conservation/conservation-slice";
-import { useLazyCheckFriendStatusQuery, useLazyRequestFriendQuery } from "../../app/api/user/user-api-slice";
+import { useLazyAcceptFriendRequestQuery, useLazyCheckFriendStatusQuery, useLazyRequestFriendQuery } from "../../app/api/user/user-api-slice";
 import { FriendStatus, UserContact } from "../../app/api/user/user-type";
 import  { CiWarning } from "react-icons/ci";
 
@@ -583,6 +583,7 @@ type ShowFriendStatusProps = {
 const ShowFriendStatus = ({ userContact, setUserContact }: ShowFriendStatusProps) => {
 
     const [ addFriend ] = useLazyRequestFriendQuery();
+    const [ acceptFriend ] = useLazyAcceptFriendRequestQuery();
 
     const handleAddFriendClick = () => {
         addFriend(userContact.id);
@@ -591,6 +592,14 @@ const ShowFriendStatus = ({ userContact, setUserContact }: ShowFriendStatusProps
             friendStatus: FriendStatus.SENDED_REQUEST
         });
     };
+
+    const handleAcceptFriendClick  =  () => {
+        acceptFriend(userContact.id);
+        setUserContact({
+            ...userContact,
+            friendStatus: FriendStatus.FRIEND
+        })
+    }
 
     return (
         <div className="flex items-center justify-between pb-2">
@@ -606,7 +615,7 @@ const ShowFriendStatus = ({ userContact, setUserContact }: ShowFriendStatusProps
                     { userContact.friendStatus == 'STRANGER' && <Button className="text-sm bg-sky-500 bg-opacity-85 py-1.5 mr-2" onClick={handleAddFriendClick}>
                         Add friend
                     </Button> }
-                    { userContact.friendStatus == 'RECEIVED_REQUEST' && <Button className="text-sm bg-sky-500 bg-opacity-85 py-1.5 mr-2">
+                    { userContact.friendStatus == 'RECEIVED_REQUEST' && <Button className="text-sm bg-sky-500 bg-opacity-85 py-1.5 mr-2" onClick={handleAcceptFriendClick}>
                         Accept
                     </Button> }
                     <Button className="text-sm bg-red-500 bg-opacity-80 py-1.5" >

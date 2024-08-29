@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FcGoogle } from "react-icons/fc";
 import { IoLogoFacebook } from "react-icons/io5";
 import { useLoginMutation } from "../../app/api/auth/auth-api-slice";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useGetAuthenticationQuery, useLazyGetAuthenticationQuery } from "../../app/api/user/user-api-slice";
 import { useDispatch } from "react-redux";
 import { logOut, setAuthenticatedUser } from "../../app/api/auth/auth-slice";

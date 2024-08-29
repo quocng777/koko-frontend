@@ -91,16 +91,15 @@ export const MainLayout = () => {
                         formatConservation.avatar = otherUser.userAvatar || defaultUserImage;
                     }
     
-                    let latestMessage;
+                    let latestMessage: Message | undefined;
                     let unread = 0;
     
                     try {
-                        latestMessage = (await getLatestMessage({conservation: conservation.id}).unwrap()).data;
+                        latestMessage = (await getLatestMessage({conservation: conservation.id}).unwrap()).data as Message;
                         dispatch(addMessage(latestMessage as Message))
 
                         unread = (await getNumUnreadMessage({conservation: conservation.id}).unwrap()).data as number;
                     } catch(exc) {
-                        latestMessage = null;
                     }
     
                     const transformedCons =  {

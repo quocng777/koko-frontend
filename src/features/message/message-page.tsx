@@ -4,7 +4,7 @@ import ChatBox from './chat-box'
 import InboxDrawer from './inbox-drawer'
 import { RootState } from '../../app/api/store'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLazyGetConservationQuery } from '../../app/api/conservation/conservation-api-slice'
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 export const MessagePage = () => {
@@ -68,11 +68,11 @@ export const MessagePage = () => {
       }
     }, [ conservation, user ]);
 
-    const handleSelectedInboxChange = (conservation: Conservation) => {
+    const handleSelectedInboxChange = useCallback((conservation: Conservation) => {
       setConservation(conservation);
       localStorage.setItem("cachedConservation", conservation.id.toString())
       navigate(`/messages/${conservation.id}`);
-    }
+    }, [])
 
   return (
     <div className='flex w-full'>

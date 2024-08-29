@@ -43,6 +43,15 @@ const userApiSlice = apiSlice.injectEndpoints({
                     params,
                     method: 'GET'
                 })
+            }),
+            acceptFriendRequest: builder.query<ApiResponse<UserFriend>, number>({
+                query: (friendId) => ({
+                    url: '/users/friends/accept',
+                    params: {
+                        friendId,
+                    },
+                    method: 'GET'
+                }) 
             })
         }
     ),
@@ -56,5 +65,6 @@ export const {
     useCheckFriendStatusQuery, 
     useLazyCheckFriendStatusQuery,
     useLazyRequestFriendQuery,
-    useGetReceivedFriendRequestsQuery
+    useGetReceivedFriendRequestsQuery,
+    useLazyAcceptFriendRequestQuery
  } = userApiSlice;

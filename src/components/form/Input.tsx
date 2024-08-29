@@ -24,12 +24,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ id, name, class
     } 
 
     return (
-        <div className="relative">
+        <div className="relative w-full">
             <input 
             type={typeState}
             name={name}
             className={
-                twMerge("ring-1 ring-slate-400 rounded-md bg-background focus:outline-none focus:ring-primary", size == "md" ? "w-72 px-6 py-2" : "",
+                twMerge("ring-1 ring-slate-400 rounded-md bg-background focus:outline-none focus:ring-primary", size == "md" ? "px-6 py-2" : "",
                     className
                 )
         } id={id} ref={ref} {...props}/>

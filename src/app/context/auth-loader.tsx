@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode } from "react"
 import { useDispatch } from "react-redux"
 import { setAuthenticatedUser } from "../api/auth/auth-slice"
 import { useGetAuthenticationQuery } from "../api/user/user-api-slice"

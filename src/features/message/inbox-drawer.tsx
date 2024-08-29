@@ -1,9 +1,15 @@
 import { useSelector } from 'react-redux'
 import { getConservations } from '../../app/api/conservation/conservation-slice'
 import { Avatar } from '../../components/avatar';
-import { Conservation } from '../../app/api/conservation/conservation-type';
-import { useMemo } from 'react';
+import { Conservation, ConservationResponse, ConservationType } from '../../app/api/conservation/conservation-type';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Message, MessageType } from '../../app/api/message/message-type';
+import { Input } from '../../components/form/Input';
+import { useLazyGetConservationsPagingQuery } from '../../app/api/conservation/conservation-api-slice';
+import { NavLink } from 'react-router-dom';
+import { getCurrentAuthentication } from '../../app/api/auth/auth-slice';
+import { IoArrowBack } from "react-icons/io5";
+import { Button } from '../../components/buttons/button';
 
 export type InboxDrawerProps = {
     selected?: number,
@@ -12,6 +18,11 @@ export type InboxDrawerProps = {
 
 const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const conservations = useSelector(getConservations);
+    const [ showSearchList, setShowSearchList ] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const [ searchList, setSearchList ] = useState<ConservationResponse[]>([]);
+    const [ getConservationPaging ] = useLazyGetConservationsPagingQuery();
+
     const sortedConservations = useMemo(() => {
         return [...conservations].sort((c1, c2) => {
             if(!c1.lastMessage && !c2.lastMessage)
@@ -21,15 +32,71 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
             else return new Date(c2.lastMessage!.createdAt).getTime() - new Date(c1.lastMessage!.createdAt).getTime()
         });
     }, [ conservations ])
-    // 
+    
+
+    const handleSearchFocus = useCallback(() => {
+
+    }, [])
+
+    const handleCloseSearch = () => {
+        searchInputRef.current!.value = '';
+        setSearchList([]);
+        setShowSearchList(false);
+    }
+
+    const handleSearchChange = useCallback(() => {
+        if(searchInputRef.current?.value.trim() !== '') {
+            const val = searchInputRef.current!.value;
+            getConservationPaging({
+                pageNum: 0,
+                pageSize: 10,
+                keyword: val
+            }).unwrap()
+            .then(res => {
+                setSearchList(res.data!.list)
+            })
+        } else {
+            setSearchList([]);
+        }
+    }, [])
 
 
   return (
     <div className='py-8 h-full'>
-        <div className='bg-background h-full rounded-2xl px-2 py-4 shadow-sm lg:min-w-96 transition-all'>
+        <div className='px-6 bg-background h-full rounded-2xl px-2 py-4 shadow-sm lg:min-w-96 transition-all max-lg:max-w-[5.25rem] overflow-x-auto'>
             <h4 className='text-lg mb-4 ms-4 max-lg:hidden'>Messages</h4>
-
-            <div className='flex gap-1 flex-col'>
+            <div className='flex items-center gap-2 w-full flex-1 mt-2'>
+                {
+                    showSearchList && <Button 
+                    variant='ghost' 
+                    size='icon' 
+                    className='text-lg hover:text-sky-500 shrink-0'
+                    onClick={handleCloseSearch}>
+                    <IoArrowBack />
+                </Button>
+                }
+                <div className='flex-1'>
+                    <Input className='rounded-3xl py-1.5 w-full' placeholder='Search conservation' 
+                    ref={searchInputRef}
+                    onChange={handleSearchChange}
+                    onClick={() => setShowSearchList(true)}/>
+                </div>
+            </div>
+            
+            {
+                showSearchList ?
+                <div className='mt-4'>
+                    {
+                        searchList.map(
+                            (conservation) => (
+                                <SearchConservationItem
+                                key={conservation.id}
+                                conservation={conservation} onClick={onChange}/>
+                            )
+                        )
+                    }
+                </div> : 
+                <div className='flex gap-1 flex-col mt-4'>
                 {
                     sortedConservations.map((conservation) => 
                         <InboxElement 
@@ -40,6 +107,8 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
                     )
                 }
             </div>
+            }
+            
         </div>
     </div>
   )
@@ -81,9 +150,9 @@ const InboxElement = ({ conservation, isSelected = false, onClick }: InboxElemen
                     <Avatar size='sm' src={conservation.avatar}/>
                     <div className='max-lg:hidden'>
                         <p className='font-medium'>{conservation.name}</p>
-                        <p className='text-xs font-normal'>{getLastMessage(conservation.lastMessage)}</p>
+                        <p className='text-xs font-normal'>{getLastMessage(conservation.lastMessage!)}</p>
                     </div>
-                    { (conservation.unread) > 0 &&
+                    { (conservation.unread!) > 0 &&
                         <div className='flex-1 max-lg:hidden'>
                             <div className='bg-red-500 size-6 rounded-full text-xs font-medium text-white flex items-center justify-center ml-auto'>
                                 {conservation.unread}
@@ -93,6 +162,36 @@ const InboxElement = ({ conservation, isSelected = false, onClick }: InboxElemen
                 </div>
         </div>
     )
+}
+
+const SearchConservationItem = ({ conservation, onClick }: { conservation: ConservationResponse, onClick: (conservation: Conservation) => void }) => {
+    const user = useSelector(getCurrentAuthentication);
+    const normConservation: Conservation = useMemo(() => {
+        if(conservation.type == ConservationType.GROUP)
+            return conservation;
+
+        const recipient = conservation
+        .participants
+        .filter(mem => mem.userId != user.id)![0];
+
+        return {
+            ...conservation,
+            name: recipient.name,
+            avatar: recipient.userAvatar,
+        }
+    }, [conservation])
+
+    const handleClick = () => {
+        onClick(conservation);
+    }
+
+    return (<div>
+        <NavLink to={`/messages/${conservation.id}`} onClick={handleClick} className='flex py-3 px-8 gap-4 items-center hover:bg-background-hover rounded-xl transition-all'>
+            <Avatar size='sm' src={normConservation.avatar}/>
+            <p className='font-semibold'>{normConservation.name}</p>
+        </NavLink>
+    </div>)
+
 }
 
 export default InboxDrawer

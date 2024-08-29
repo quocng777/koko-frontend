@@ -30,7 +30,7 @@ const conservationSlice = createSlice({
             if(!conservation)
                 return;
 
-            conservation.unread += 1;
+            conservation.unread! += 1;
         },
         setEmptyUnreadMessage: (state, action: PayloadAction<number>) => {
             let conservation = state.find((cons) => cons.id === action.payload);

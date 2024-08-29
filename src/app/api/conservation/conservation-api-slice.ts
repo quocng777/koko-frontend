@@ -1,6 +1,12 @@
 import { apiSlice } from "../base/api-slice";
-import { ApiResponse } from "../base/type";
+import { ApiPaging, ApiResponse } from "../base/type";
 import { Conservation, ConservationResponse } from "./conservation-type";
+
+export type ConservationParams = {
+    pageSize: number,
+    pageNum: number,
+    keyword?: string
+}
 
 export const conservationApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
@@ -15,6 +21,13 @@ export const conservationApiSlice = apiSlice.injectEndpoints({
                 url: `/conservations/${consId}`,
                 method: 'GET'
             })
+        }),
+        getConservationsPaging: builder.query<ApiResponse<ApiPaging<Conservation>>, ConservationParams>({
+            query: (params) => ({
+                url: '/conservations/paging',
+                params,
+                method: "GET"
+            })
         })
     })
 });
@@ -22,5 +35,6 @@ export const conservationApiSlice = apiSlice.injectEndpoints({
 export const { 
     useGetConservationsQuery, 
     useLazyGetConservationsQuery, 
-    useLazyGetConservationQuery 
+    useLazyGetConservationQuery,
+    useLazyGetConservationsPagingQuery 
 } = conservationApiSlice;

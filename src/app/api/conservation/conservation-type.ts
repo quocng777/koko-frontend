@@ -10,8 +10,8 @@ export type ConservationResponse = {
 }
 
 export type Conservation = ConservationResponse & {
-    lastMessage: Message | null,
-    unread: number,
+    lastMessage?: Message,
+    unread?: number,
 }
 
 export type Participant = {
