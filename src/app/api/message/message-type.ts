@@ -1,3 +1,5 @@
+import { UserContact } from "../user/user-type"
+
 export type Message = {
     id: number | null,
     sender: number,
@@ -9,7 +11,8 @@ export type Message = {
     tempId?: string,
     hasError?: boolean,
     seenBy?: MessageSeen[],
-    deletedAt?: string
+    deletedAt?: string,
+    broadcast?: MessageBroadcast
 }
 
 export type Attachment = {
@@ -26,7 +29,8 @@ export enum MessageType {
     IMAGE = "IMAGE",
     VIDEO = "VIDEO",
     FILE = "FILE",
-    DELETED = "DELETED"
+    DELETED = "DELETED",
+    BROADCAST = "BROADCAST"
 }
 
 export type MessageQuery = {
@@ -40,6 +44,18 @@ export type MessageSendParams = {
     message?: string,
     type: MessageType,
     attachments?: Attachment[] 
+}
+
+export type MessageBroadcast = {
+    broadcastType: BroadcastType,
+    targetUsers: UserContact[]
+}
+
+export enum BroadcastType {
+    CREATE =  "CREATE",
+    ADD_MEMBER = "ADD_MEMBER",
+    JOIN = "JOIN",
+    LEAVE = "LEAVE"
 }
 
 export type MessageSeen = {

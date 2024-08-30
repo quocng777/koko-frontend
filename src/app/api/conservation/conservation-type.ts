@@ -26,3 +26,10 @@ export enum ConservationType  {
     SINGLE = "SINGLE",
     GROUP = "GROUP",
 }
+
+
+export type ConservationParams = {
+    name: string,
+    type: ConservationType,
+    participants: number[]
+}

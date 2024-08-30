@@ -59,7 +59,6 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
     const [ isLoading, setIsLoading ] = useState(false);
     const [ error, setError ] = useState(false);
     const [ addedOldMessages, setAddedOldMessages ] = useState(false)
-    const { client } = useSocket();
     const [ typingUsers, setTypingUsers ] = useState<Participant[]>([]);
     const user = useSelector(getCurrentAuthentication);
     const latestMessageRef = useRef<HTMLDivElement | null>(null);
@@ -149,7 +148,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
         } else {
             sendTypingStatus({conservationId: conservation.id, status: false});
         }
-    }, [ client, conservation])
+    }, [ conservation ])
 
     // show friend status if the conservation is message direct type
     useEffect(() => {

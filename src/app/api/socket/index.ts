@@ -8,6 +8,7 @@ import { useEndpoints } from "../../../hook/use-endpoints";
 import { Notification } from "../notification/notification-type";
 import { increaseNotification } from "../notification/notification-slice";
 import { useToast } from "../../../hook/use-toast";
+import { useEffect } from "react";
 
 const accessToken = localStorage.getItem("accessToken");
 
@@ -32,6 +33,7 @@ const useSocket = () => {
             onConnect: () => {
                 client.subscribe(EndPoints.MESSAGE_COME, (message) => {
                     const msg = JSON.parse(message.body) as Message;
+
                     if(msg.sender !== user.id) {
                         dispatch(addMessage(msg));
                         dispatch(updateLatestMsg(msg));
@@ -75,11 +77,7 @@ const useSocket = () => {
 
         socket.client = client;
 
-    }
-
-    return { 
-        client: socket.client
-     };    
+    } 
 }
 
 export const topicSubscribe = async(topic: string, callback: messageCallbackType) => {
@@ -90,6 +88,17 @@ export const topicSubscribe = async(topic: string, callback: messageCallbackType
     }
 
     return socket.client.subscribe(topic, callback)
+}
+
+export const useSubscribeTopic = (topic: string, callback: messageCallbackType, dependencies: any[]) => {
+    useEffect(() => {
+        const subscription = topicSubscribe(topic, callback);
+
+        return () => {
+            subscription
+                .then(res => res.unsubscribe())
+        }
+    }, dependencies)
 }
 
 export const sendTypingStatus = ({ conservationId, status }: { conservationId: number, status: boolean }) => {

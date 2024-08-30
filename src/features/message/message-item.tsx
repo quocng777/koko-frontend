@@ -1,6 +1,6 @@
 import { forwardRef, useMemo } from 'react'
 import { Conservation, Participant } from '../../app/api/conservation/conservation-type'
-import { Message, MessageType } from '../../app/api/message/message-type'
+import { BroadcastType, Message, MessageType } from '../../app/api/message/message-type'
 import { useDispatch, useSelector } from 'react-redux'
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
 import { Avatar } from '../../components/avatar'
@@ -22,6 +22,17 @@ type MessageMetaData = {
     showUserInfo: boolean,
     formattedCreatedAt: string,
     sender: Participant,
+}
+
+const getBroadcastMessage  = (broadcastType: BroadcastType ) => {
+    if(broadcastType == BroadcastType.CREATE)
+        return "created the group";
+    else if (broadcastType == BroadcastType.ADD_MEMBER) 
+        return "added";
+    else if (broadcastType == BroadcastType.JOIN)
+        return "joined the group";
+    else if (broadcastType == BroadcastType.LEAVE)
+        return "left the group";
 }
 
 export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ message, prevMessage, conservation, isLatestMessage }, ref) => {
@@ -79,48 +90,62 @@ export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(({ messa
     }
 
   return (
-    <div className='w-full grid group/item' ref={ref}>
-        <div 
-        className={`${metaData.isMe ? 'justify-self-end' : ''}`}>
-            {metaData.showUserInfo && <div className="py-1.5"></div>}
-            <div className="w-full flex gap-2">
-                {!metaData.isMe && 
-                <div className="w-9">
-                    {metaData.showUserInfo && <Avatar size="sm" src={metaData.sender.userAvatar}/>}
-                </div>}
-                <div className={`${metaData.isMe ? 'grid justify-items-end' : ''}`}>
-                    {metaData.showUserInfo && 
-                        <div className="text-xs font-medium flex gap-3 my-1">
-                            {!metaData.isMe && <p>{metaData.sender.name}</p>}
-                            <p className="text-slate-500 pr-2">{metaData.formattedCreatedAt}</p>
-                        </div>}
-                    <div className='flex items-center gap-6'>
-                        <div className={`${metaData.isMe ? 'order-2' : 'order-1'}`}>
-                            <MessageContent message={ message } isMe={ metaData.isMe } senderName={ sender.name }/>
+    message.type == MessageType.BROADCAST 
+        ? (
+            <div ref={ref} className='w-full flex items-center justify-center text-sm text-slate-700'>
+                <div className='flex py-1.5 px-4 rounded-full bg-slate-300'>
+                    <Avatar src={sender.userAvatar} size='xs'/>
+                    <p>&nbsp;{sender.name}&nbsp;</p>
+                    {getBroadcastMessage(message.broadcast!.broadcastType)}
+                    &nbsp;
+                    { message.broadcast!.targetUsers.map(u => u.name).join(", ") }
+                </div>
+            </div>
+        )
+        : (
+            <div className='w-full grid group/item' ref={ref}>
+            <div 
+            className={`${metaData.isMe ? 'justify-self-end' : ''}`}>
+                {metaData.showUserInfo && <div className="py-1.5"></div>}
+                <div className="w-full flex gap-2">
+                    {!metaData.isMe && 
+                    <div className="w-9">
+                        {metaData.showUserInfo && <Avatar size="sm" src={metaData.sender.userAvatar}/>}
+                    </div>}
+                    <div className={`${metaData.isMe ? 'grid justify-items-end' : ''}`}>
+                        {metaData.showUserInfo && 
+                            <div className="text-xs font-medium flex gap-3 my-1">
+                                {!metaData.isMe && <p>{metaData.sender.name}</p>}
+                                <p className="text-slate-500 pr-2">{metaData.formattedCreatedAt}</p>
+                            </div>}
+                        <div className='flex items-center gap-6'>
+                            <div className={`${metaData.isMe ? 'order-2' : 'order-1'}`}>
+                                <MessageContent message={ message } isMe={ metaData.isMe } senderName={ sender.name }/>
+                            </div>
+                            {
+                                message.id && message.type !== MessageType.DELETED && <div className={`opacity-0 group-hover/item:opacity-100 ${metaData.isMe ? 'order-1' : 'order-2'} transition-opacity duration-300`}>
+                                {metaData.isMe && <Button variant='ghost' size='icon'  className={`size-8 shrink-0 hover:text-red-500`}
+                                onClick={handleUnsendMessageClick}>
+                                    <MdDeleteOutline />
+                                </Button>}
+                            </div>
+                            }
                         </div>
-                        {
-                            message.id && message.type !== MessageType.DELETED && <div className={`opacity-0 group-hover/item:opacity-100 ${metaData.isMe ? 'order-1' : 'order-2'} transition-opacity duration-300`}>
-                            {metaData.isMe && <Button variant='ghost' size='icon'  className={`size-8 shrink-0 hover:text-red-500`}
-                            onClick={handleUnsendMessageClick}>
-                                <MdDeleteOutline />
-                            </Button>}
-                        </div>
-                        }
                     </div>
                 </div>
             </div>
-        </div>
-        {/* show message sending status */}
-            {
-                isLatestMessage && metaData.isMe 
-                && (<MessageSendingStatus message={message}/>) 
-            }
-            {
-                !isLatestMessage && metaData.isMe 
-                && (<MessageSendingStatus message={message} unShowIfSent={true}/>) 
-            }
-    </div>
-  );
+            {/* show message sending status */}
+                {
+                    isLatestMessage && metaData.isMe 
+                    && (<MessageSendingStatus message={message}/>) 
+                }
+                {
+                    !isLatestMessage && metaData.isMe 
+                    && (<MessageSendingStatus message={message} unShowIfSent={true}/>) 
+                }
+         </div>
+        )
+    );
 })
 
 const MessageSendingStatus = ({message, unShowIfSent = false}: {message: Message, unShowIfSent?: boolean}) => {

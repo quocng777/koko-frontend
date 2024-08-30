@@ -1,15 +1,21 @@
-import { useSelector } from 'react-redux'
-import { getConservations } from '../../app/api/conservation/conservation-slice'
+import { useDispatch, useSelector } from 'react-redux'
+import { addConservation, getConservations } from '../../app/api/conservation/conservation-slice'
 import { Avatar } from '../../components/avatar';
 import { Conservation, ConservationResponse, ConservationType } from '../../app/api/conservation/conservation-type';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Message, MessageType } from '../../app/api/message/message-type';
 import { Input } from '../../components/form/Input';
-import { useLazyGetConservationsPagingQuery } from '../../app/api/conservation/conservation-api-slice';
+import { useLazyGetConservationQuery, useLazyGetConservationsPagingQuery } from '../../app/api/conservation/conservation-api-slice';
 import { NavLink } from 'react-router-dom';
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice';
 import { IoArrowBack } from "react-icons/io5";
 import { Button } from '../../components/buttons/button';
+import { AiOutlineUsergroupAdd } from "react-icons/ai";
+import { createPortal } from 'react-dom';
+import { CreateGroupModal } from './create-group-modal';
+import { useEndpoints } from '../../hook/use-endpoints';
+import { useSubscribeTopic } from '../../app/api/socket';
+import { useLazyGetNumUnreadMsgQuery } from '../../app/api/message/message-api-slice';
 
 export type InboxDrawerProps = {
     selected?: number,
@@ -22,6 +28,11 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const [ searchList, setSearchList ] = useState<ConservationResponse[]>([]);
     const [ getConservationPaging ] = useLazyGetConservationsPagingQuery();
+    const [ showCreateGroupModal, setShowCreateGroupModal ] = useState(false);
+    const TOPIC_ENDPOINTS = useEndpoints();
+    const [ getConservation ] = useLazyGetConservationQuery();
+    const [ getUnreadMsgNum ] = useLazyGetNumUnreadMsgQuery();
+    const dispatch = useDispatch();
 
     const sortedConservations = useMemo(() => {
         return [...conservations].sort((c1, c2) => {
@@ -34,15 +45,15 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
     }, [ conservations ])
     
 
-    const handleSearchFocus = useCallback(() => {
-
-    }, [])
-
     const handleCloseSearch = () => {
         searchInputRef.current!.value = '';
         setSearchList([]);
         setShowSearchList(false);
     }
+
+    const handleModalCreateGroupClose = useCallback(() => {
+        setShowCreateGroupModal(false);
+    }, [])
 
     const handleSearchChange = useCallback(() => {
         if(searchInputRef.current?.value.trim() !== '') {
@@ -60,11 +71,54 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
         }
     }, [])
 
+    const handleCreateGroupClick = () => {
+        setShowCreateGroupModal(true);
+    }
+
+    const handleCreateGroupSuccess = useCallback((conservation: Conservation) => {
+        setShowCreateGroupModal(false);
+        onChange(conservation);
+    }, [])
+
+    useSubscribeTopic(TOPIC_ENDPOINTS.MESSAGE_COME, (message) => {
+        const msg = JSON.parse(message.body) as Message;
+
+        console.log(conservations)
+        const idx = conservations.findIndex(cons => cons.id == msg.conservation)
+
+        if(idx == -1) {
+            getConservation(msg.conservation)
+            .unwrap()
+            .then(res => {
+                const data = res.data!;
+                getUnreadMsgNum({conservation: msg.conservation})
+                .unwrap()
+                .then((res) => {
+                    const unread = res.data!;
+                    const conservation: Conservation = {
+                        ...data,
+                        lastMessage: msg,
+                        unread,
+                    }
+                    dispatch(addConservation(conservation))
+                })
+            })
+        }
+    }, [ conservations ]);
+
 
   return (
     <div className='py-8 h-full'>
-        <div className='px-6 bg-background h-full rounded-2xl px-2 py-4 shadow-sm lg:min-w-96 transition-all max-lg:max-w-[5.25rem] overflow-x-auto'>
-            <h4 className='text-lg mb-4 ms-4 max-lg:hidden'>Messages</h4>
+        <div className='px-6 bg-background h-full rounded-2xl  py-4 shadow-sm lg:min-w-96 transition-all max-lg:max-w-[5.25rem] overflow-x-auto max-lg:px-2'>
+            <div className='flex items-center max-lg:hidden mb-4 ms-4'>
+                <h4 className='text-lg max-lg:hidden font-semibold'>Messages</h4>
+                <div className='ml-auto'>
+                    <Button variant='ghost' size='icon' className='text-sky-400' onClick={handleCreateGroupClick}>
+                        <AiOutlineUsergroupAdd />
+                    </Button>
+                </div>
+            </div>
+
             <div className='flex items-center gap-2 w-full flex-1 mt-2'>
                 {
                     showSearchList && <Button 
@@ -110,6 +164,7 @@ const InboxDrawer = ( { selected, onChange } : InboxDrawerProps ) => {
             }
             
         </div>
+        {showCreateGroupModal && createPortal(<CreateGroupModal onClose={handleModalCreateGroupClose} onSuccess={handleCreateGroupSuccess}/>, document.body)}
     </div>
   )
 }
