@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addConservation, getConservations } from '../../app/api/conservation/conservation-slice'
 import { Avatar } from '../../components/avatar';
 import { Conservation, ConservationResponse, ConservationType } from '../../app/api/conservation/conservation-type';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Message, MessageType } from '../../app/api/message/message-type';
 import { Input } from '../../components/form/Input';
 import { useLazyGetConservationQuery, useLazyGetConservationsPagingQuery } from '../../app/api/conservation/conservation-api-slice';

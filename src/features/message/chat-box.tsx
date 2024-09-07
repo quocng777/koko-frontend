@@ -17,7 +17,7 @@ import { MessageItem } from "./message-item";
 import { useSendMessage } from "../../hook/send-message";
 import { MdCancel } from "react-icons/md";
 import SimpleSpinner from "../../components/spinner/simple-spinner";
-import useSocket, { sendTypingStatus, topicSubscribe } from "../../app/api/socket";
+import { sendTypingStatus, topicSubscribe } from "../../app/api/socket";
 import { getCurrentAuthentication } from "../../app/api/auth/auth-slice";
 import { FaArrowDown } from "react-icons/fa6";
 import { useEndpoints } from "../../hook/use-endpoints";
@@ -25,6 +25,7 @@ import { setEmptyUnreadMessage } from "../../app/api/conservation/conservation-s
 import { useLazyAcceptFriendRequestQuery, useLazyCheckFriendStatusQuery, useLazyRequestFriendQuery } from "../../app/api/user/user-api-slice";
 import { FriendStatus, UserContact } from "../../app/api/user/user-type";
 import  { CiWarning } from "react-icons/ci";
+import { BiInfoCircle } from "react-icons/bi";
 
 export type AttachmentInput = Attachment & {
     file: File,
@@ -40,7 +41,12 @@ const getMessageType = (type: string): MessageType | undefined => {
         return MessageType.FILE
 }
 
-const ChatBox = ({conservation} : {conservation: Conservation}) => {
+type ChatBoxProps = {
+    conservation: Conservation,
+    showInfoToggle: () => void;
+}
+
+const ChatBox = ({conservation, showInfoToggle} : ChatBoxProps ) => {
 
     const [ attachmentsInput, setAttachmentInput ] = useState<AttachmentInput[]>([])
     const [ showEmojiPicker, setShowEmojiPicker ] = useState(false);
@@ -317,7 +323,7 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
   return (
     <div className="py-8 px-6 min-h-screen w-full relative max-h-screen">
         <div className="bg-background rounded-2xl px-8 h-full overflow-hidden flex flex-col relative">
-            <ChatBoxHeader conservation={conservation}/>
+            <ChatBoxHeader conservation={conservation} showInfoToggle={showInfoToggle}/>
             { userContact && userContact.friendStatus != 'FRIEND' && <ShowFriendStatus userContact={userContact} setUserContact={setUserContact}/>}
             <div ref={messageContainerRef} className="mb-4 overflow-y-auto h-full items-end flex flex-col">
                 <ul className="flex flex-col gap-1 max-h-full w-full mt-auto">
@@ -388,13 +394,18 @@ const ChatBox = ({conservation} : {conservation: Conservation}) => {
   )
 }
 
-const ChatBoxHeader = ({conservation}: {conservation: Conservation}) => {
+const ChatBoxHeader = ({conservation, showInfoToggle}: {conservation: Conservation, showInfoToggle: () => void}) => {
 
     return (
         <div className="bg-background py-2 flex sticky bottom-0 left-0">
             <Avatar size="md" src={conservation.avatar}/>
             <div className="flex-1 flex items-center ms-3">
                 <p className="text-lg font-semibold">{conservation.name}</p>
+            </div>
+            <div>
+                <Button variant="ghost" size="icon" className="p-1.5" onClick={showInfoToggle}>
+                    <BiInfoCircle />
+                </Button>
             </div>
         </div>
     )

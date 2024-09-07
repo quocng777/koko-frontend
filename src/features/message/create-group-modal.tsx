@@ -100,7 +100,7 @@ export const CreateGroupModal = ({ onClose, onSuccess }: CreateGroupModal) => {
                 const conservation = res.data!;
                 onSuccess(conservation);
             })
-            .catch(err => {
+            .catch(() => {
                 alert('Have error when create this group')
             })
 

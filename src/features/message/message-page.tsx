@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
 import { useLazyGetConservationQuery } from '../../app/api/conservation/conservation-api-slice'
 import { getCurrentAuthentication } from '../../app/api/auth/auth-slice'
+import { ConservationInfo } from './conservation-info'
 export const MessagePage = () => {
 
     const navigate = useNavigate();
@@ -22,6 +23,7 @@ export const MessagePage = () => {
     const [ getConservation ] = useLazyGetConservationQuery();
     const [ showStart, setShowStart ] = useState(false);
     const user = useSelector(getCurrentAuthentication);
+    const [ showInfo, setShowInfo ] = useState(false);
 
     if(consId === 'new') {
       // handle later
@@ -42,6 +44,7 @@ export const MessagePage = () => {
               }
           })
           .catch((err) => {
+            console.log(err)
           })
         }
       } else if (consId == 'start') {
@@ -74,11 +77,18 @@ export const MessagePage = () => {
       navigate(`/messages/${conservation.id}`);
     }, [])
 
+    const handleShowInfoToggle = useCallback(() => {
+      setShowInfo(prev => {
+        return !prev;
+      }); 
+    }, [])
+
   return (
     <div className='flex w-full'>
         <InboxDrawer selected={conservation?.id} onChange={handleSelectedInboxChange} />
         {showStart && <p>New conservation</p>}
-        {conservation && <ChatBox key={conservation?.id} conservation={conservation}/>}
+        {conservation && <ChatBox key={conservation?.id} conservation={conservation} showInfoToggle={handleShowInfoToggle}/>}
+        {conservation && showInfo && <ConservationInfo conservation={conservation} />}
     </div>
   )
 }
